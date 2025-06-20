@@ -232,7 +232,7 @@ function App() {
                 <Github className="w-6 h-6" />
               </a>
               <a
-                href="www.linkedin.com/in/carlo-musongela-bb024b202"
+                href="https://www.linkedin.com/in/carlo-musongela-bb024b202"
                 className="text-gray-400 hover:text-blue-400 transition-colors duration-200 transform hover:scale-110"
               >
                 <Linkedin className="w-6 h-6" />
@@ -496,7 +496,7 @@ function App() {
                 <Github className="w-5 h-5" />
               </a>
               <a
-                href="www.linkedin.com/in/carlo-musongela-bb024b202"
+                href="https://www.linkedin.com/in/carlo-musongela-bb024b202"
                 className="text-gray-400 hover:text-blue-400 transition-colors duration-200 transform hover:scale-110"
               >
                 <Linkedin className="w-5 h-5" />
