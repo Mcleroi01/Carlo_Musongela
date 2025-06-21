@@ -13,19 +13,10 @@ import {
   Menu,
   X,
   ExternalLink,
-  Eye,
-  Calendar,
-  User,
 } from "lucide-react";
-import { ProjectModal } from "./components/ProjectModal";
-import { SuccessModal } from "./components/SuccessModal";
-import { projectsData, Project } from "./data/projects";
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -57,10 +48,10 @@ function App() {
     });
 
     if (response.ok) {
-      setIsSuccessModalOpen(true);
+      alert("Thank you for your message! I'll get back to you soon.");
       setFormData({ name: "", email: "", message: "" });
     } else {
-      setIsSuccessModalOpen(false);
+      alert("Oops! Something went wrong. Please try again.");
     }
   };
 
@@ -68,39 +59,6 @@ function App() {
     const element = document.getElementById(sectionId);
     element?.scrollIntoView({ behavior: "smooth" });
     setIsMenuOpen(false);
-  };
-
-  const openProjectModal = (project: Project) => {
-    setSelectedProject(project);
-    setIsProjectModalOpen(true);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return "bg-green-500/20 text-green-400 border-green-500/30";
-      case "In Progress":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      case "Planned":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
-      default:
-        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
-    }
-  };
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case "Web App":
-        return <Globe className="w-4 h-4" />;
-      case "Mobile App":
-        return <Smartphone className="w-4 h-4" />;
-      case "API":
-        return <Database className="w-4 h-4" />;
-      case "System":
-        return <Code2 className="w-4 h-4" />;
-      default:
-        return <Code2 className="w-4 h-4" />;
-    }
   };
 
   return (
@@ -174,27 +132,12 @@ function App() {
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-teal-400 group-hover:w-full transition-all duration-300"></span>
               </button>
               <button
-                onClick={() => scrollToSection("projects")}
-                className="text-gray-300 hover:text-white transition-colors duration-200 relative group"
-              >
-                Projects
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-teal-400 group-hover:w-full transition-all duration-300"></span>
-              </button>
-              <button
                 onClick={() => scrollToSection("contact")}
                 className="text-gray-300 hover:text-white transition-colors duration-200 relative group"
               >
                 Contact
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-teal-400 group-hover:w-full transition-all duration-300"></span>
               </button>
-
-              <a
-                href="/Musongela_carlo.pdf"
-                download
-                className="bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
-              >
-                Download CV
-              </a>
             </div>
 
             {/* Mobile menu button */}
@@ -230,27 +173,11 @@ function App() {
                 Services
               </button>
               <button
-                onClick={() => scrollToSection("projects")}
-                className="block px-3 py-2 text-gray-300 hover:text-white transition-colors duration-200"
-              >
-                Projects
-              </button>
-              <button
                 onClick={() => scrollToSection("contact")}
                 className="block px-3 py-2 text-gray-300 hover:text-white transition-colors duration-200"
               >
                 Contact
               </button>
-
-              <div className="mt-4 mb-4">
-                <a
-                  href="/Musongela_carlo.pdf"
-                  download
-                  className="bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
-                >
-                  Download CV
-                </a>
-              </div>
             </div>
           </div>
         )}
@@ -259,22 +186,26 @@ function App() {
       {/* Hero Section */}
       <section
         id="home"
-        className="relative m-4 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-16"
+        className="relative mt-4 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-16"
       >
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="mb-8">
             <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500 to-teal-500 p-1 shadow-2xl shadow-purple-500/25">
-              <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 to-teal-400/10 animate-pulse-slow"></div>
-                <span className="text-4xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-teal-400 bg-clip-text relative z-10">
-                  CM
-                </span>
+              <div className="w-full h-full rounded-full bg-gray-900 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 to-teal-400/10 animate-pulse-slow z-0"></div>
+
+                <img
+                  src="/carlo-musongela.png"
+                  alt="Carlo Musongela"
+                  className="w-full h-full object-cover rounded-full relative z-10"
+                />
               </div>
             </div>
+
             <h1 className="text-4xl md:text-6xl font-bold mb-4">
               Hey, I'm{" "}
               <span className="text-transparent bg-gradient-to-r from-purple-400 to-teal-400 bg-clip-text">
-                Carlo
+                Carlo Musongela
               </span>{" "}
               ✨
             </h1>
@@ -292,19 +223,19 @@ function App() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <button
-                onClick={() => scrollToSection("contact")}
+              <a
+                href="https://wa.me/qr/EJ3ZZB756Z3CC1"
                 className="bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
               >
                 <Mail className="inline-block w-5 h-5 mr-2" />
                 Contact Me
-              </button>
+              </a>
               <button
-                onClick={() => scrollToSection("projects")}
+                onClick={() => scrollToSection("services")}
                 className="border border-gray-600 hover:border-purple-500/50 text-gray-300 hover:text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 backdrop-blur-sm bg-gray-800/30 hover:bg-gray-800/50"
               >
                 <ExternalLink className="inline-block w-5 h-5 mr-2" />
-                View Projects
+                View Services
               </button>
             </div>
 
@@ -321,6 +252,7 @@ function App() {
               >
                 <Linkedin className="w-6 h-6" />
               </a>
+
               <div className="flex items-center text-gray-400">
                 <MapPin className="w-4 h-4 mr-1" />
                 <span className="text-sm">Luanda, Angola</span>
@@ -401,7 +333,7 @@ function App() {
                     Frontend:
                   </h4>
                   <p className="text-sm text-gray-300">
-                    React.js, Flutter, HTML5, CSS3, JavaScript
+                    React.js, Flutter, HTML5, CSS3(Tailwind), JavaScript
                   </p>
                 </div>
                 <div>
@@ -457,144 +389,6 @@ function App() {
                   Cross-Platform Solutions
                 </li>
               </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Projects Section */}
-      <section
-        id="projects"
-        className="py-20 px-4 sm:px-6 lg:px-8 relative z-10"
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              My Projects{" "}
-              <span className="text-transparent bg-gradient-to-r from-purple-400 to-teal-400 bg-clip-text">
-                Completed
-              </span>
-            </h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              A showcase of successful projects delivered to satisfied clients
-              across various industries.
-            </p>
-          </div>
-
-          {/* Projects Table */}
-          <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-700/50 border-b border-gray-600/50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Project
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Category
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Client
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Completed
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-700/50">
-                  {projectsData.map((project) => (
-                    <tr
-                      key={project.id}
-                      className="hover:bg-gray-700/20 transition-colors duration-200"
-                    >
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="font-medium text-white">
-                            {project.title}
-                          </div>
-                          <div className="text-sm text-gray-400 mt-1 line-clamp-2">
-                            {project.description}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center text-gray-300">
-                          {getCategoryIcon(project.category)}
-                          <span className="ml-2 text-sm">
-                            {project.category}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center text-gray-300">
-                          <User className="w-4 h-4 mr-2 text-blue-400" />
-                          <span className="text-sm">{project.client}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                            project.status
-                          )}`}
-                        >
-                          {project.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center text-gray-300">
-                          <Calendar className="w-4 h-4 mr-2 text-green-400" />
-                          <span className="text-sm">
-                            {project.completedDate}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => openProjectModal(project)}
-                          className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-purple-600/20 to-teal-600/20 hover:from-purple-600/30 hover:to-teal-600/30 text-purple-300 hover:text-white rounded-lg text-sm font-medium transition-all duration-200 border border-purple-500/30 hover:border-purple-500/50"
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Projects Summary */}
-          <div className="grid md:grid-cols-4 gap-6 mt-12">
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 text-center">
-              <div className="text-3xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-teal-400 bg-clip-text mb-2">
-                {projectsData.length}
-              </div>
-              <div className="text-gray-400 text-sm">Total Projects</div>
-            </div>
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 text-center">
-              <div className="text-3xl font-bold text-green-400 mb-2">
-                {projectsData.filter((p) => p.status === "Completed").length}
-              </div>
-              <div className="text-gray-400 text-sm">Completed</div>
-            </div>
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 text-center">
-              <div className="text-3xl font-bold text-blue-400 mb-2">
-                {projectsData.filter((p) => p.status === "In Progress").length}
-              </div>
-              <div className="text-gray-400 text-sm">In Progress</div>
-            </div>
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 text-center">
-              <div className="text-3xl font-bold text-yellow-400 mb-2">
-                {projectsData.filter((p) => p.status === "Planned").length}
-              </div>
-              <div className="text-gray-400 text-sm">Planned</div>
             </div>
           </div>
         </div>
@@ -710,9 +504,6 @@ function App() {
             </div>
 
             <div className="flex items-center space-x-4">
-              <p className="text-sm text-gray-400 mr-4">
-                Built with React, TypeScript and Tailwind CSS
-              </p>
               <a
                 href="https://github.com/Mcleroi01"
                 className="text-gray-400 hover:text-purple-400 transition-colors duration-200 transform hover:scale-110"
@@ -729,20 +520,6 @@ function App() {
           </div>
         </div>
       </footer>
-
-      {/* Modals */}
-      <ProjectModal
-        isOpen={isProjectModalOpen}
-        onClose={() => setIsProjectModalOpen(false)}
-        project={selectedProject}
-      />
-
-      <SuccessModal
-        isOpen={isSuccessModalOpen}
-        onClose={() => setIsSuccessModalOpen(false)}
-        title="Message Sent Successfully!"
-        message="Thank you for your message! I'll get back to you soon."
-      />
     </div>
   );
 }
