@@ -54,7 +54,6 @@ function App() {
       alert("Oops! Something went wrong. Please try again.");
     }
   };
-  
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -334,7 +333,7 @@ function App() {
                     Frontend:
                   </h4>
                   <p className="text-sm text-gray-300">
-                    React.js, Flutter, HTML5, CSS3, JavaScript
+                    React.js, Flutter, HTML5, CSS3(Tailwind), JavaScript
                   </p>
                 </div>
                 <div>
@@ -348,7 +347,7 @@ function App() {
                     Database:
                   </h4>
                   <p className="text-sm text-gray-300">
-                    MySQL, PostgreSQL, Firebase Firestore
+                    MySQL, PostgreSQL, Firestore
                   </p>
                 </div>
                 <div>
