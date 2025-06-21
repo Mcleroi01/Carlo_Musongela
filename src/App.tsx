@@ -32,13 +32,29 @@ function App() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log("Form submitted:", formData);
-    alert("Thank you for your message! I'll get back to you soon.");
-    setFormData({ name: "", email: "", message: "" });
+
+    const response = await fetch("https://formspree.io/f/xwpbnrgk", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+      }),
+    });
+
+    if (response.ok) {
+      alert("Thank you for your message! I'll get back to you soon.");
+      setFormData({ name: "", email: "", message: "" });
+    } else {
+      alert("Oops! Something went wrong. Please try again.");
+    }
   };
+  
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -208,13 +224,13 @@ function App() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <button
-                onClick={() => scrollToSection("contact")}
+              <a
+                href="https://wa.me/qr/EJ3ZZB756Z3CC1"
                 className="bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
               >
                 <Mail className="inline-block w-5 h-5 mr-2" />
                 Contact Me
-              </button>
+              </a>
               <button
                 onClick={() => scrollToSection("services")}
                 className="border border-gray-600 hover:border-purple-500/50 text-gray-300 hover:text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 backdrop-blur-sm bg-gray-800/30 hover:bg-gray-800/50"
