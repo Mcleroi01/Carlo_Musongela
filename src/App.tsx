@@ -266,11 +266,16 @@ function App() {
             <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500 to-teal-500 p-1 shadow-2xl shadow-purple-500/25">
               <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 to-teal-400/10 animate-pulse-slow"></div>
-                <span className="text-4xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-teal-400 bg-clip-text relative z-10">
-                  CM
-                </span>
+
+                {/* Image de profil */}
+                <img
+                  src="/carlo-musongela.png" // Remplace par le chemin réel de ta photo
+                  alt="Photo de profil"
+                  className="w-full h-full object-cover rounded-full relative z-10"
+                />
               </div>
             </div>
+
             <h1 className="text-4xl md:text-6xl font-bold mb-4">
               Hey, I'm{" "}
               <span className="text-transparent bg-gradient-to-r from-purple-400 to-teal-400 bg-clip-text">
