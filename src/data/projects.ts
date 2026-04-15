@@ -58,6 +58,7 @@ export const projectsData: Project[] = [
         client: "FoodChain Enterprises",
         duration: "3 months",
         teamSize: 2,
+        liveUrl: "https://restaurettetemplate.netlify.app",
         completedDate: "September 2023",
         githubUrl: "https://github.com/mcleroi01/restaurant-api",
         image: "https://images.pexels.com/photos/1581384/pexels-photo-1581384.jpeg?auto=compress&cs=tinysrgb&w=800",

@@ -13,13 +13,14 @@ import {
   Menu,
   X,
   ExternalLink,
-  Eye,
-  Calendar,
-  User,
 } from "lucide-react";
 import { ProjectModal } from "./components/ProjectModal";
 import { SuccessModal } from "./components/SuccessModal";
+import { WhatsAppButton } from "./components/WhatsAppButton";
+import { ProjectCard } from "./components/ProjectCard";
+import { MouseFollower } from "./components/MouseFollower";
 import { projectsData, Project } from "./data/projects";
+import ClientLogos from "./components/ClientLogos";
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -33,7 +34,7 @@ function App() {
   });
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setFormData({
       ...formData,
@@ -105,6 +106,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white relative overflow-hidden">
+      {/* Mouse Follower Effect */}
+      <MouseFollower />
+
       {/* Animated Neon Corridor Background */}
       <div className="fixed inset-0 pointer-events-none">
         {/* Base gradient */}
@@ -328,7 +332,7 @@ function App() {
               </a>
               <div className="flex items-center text-gray-400">
                 <MapPin className="w-4 h-4 mr-1" />
-                <span className="text-sm">Luanda, Angola</span>
+                <span className="text-sm">Kinshasa, DR CONGO</span>
               </div>
               <div className="flex items-center text-gray-400">
                 <Languages className="w-4 h-4 mr-1" />
@@ -338,6 +342,8 @@ function App() {
           </div>
         </div>
       </section>
+
+      <ClientLogos />
 
       {/* Services Section */}
       <section
@@ -486,93 +492,15 @@ function App() {
             </p>
           </div>
 
-          {/* Projects Table */}
-          <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700/50 overflow-hidden shadow-2xl">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-700/50 border-b border-gray-600/50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Project
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Category
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Client
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300">
-                      Completed
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-300">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-700/50">
-                  {projectsData.map((project) => (
-                    <tr
-                      key={project.id}
-                      className="hover:bg-gray-700/20 transition-colors duration-200"
-                    >
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="font-medium text-white">
-                            {project.title}
-                          </div>
-                          <div className="text-sm text-gray-400 mt-1 line-clamp-2">
-                            {project.description}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center text-gray-300">
-                          {getCategoryIcon(project.category)}
-                          <span className="ml-2 text-sm">
-                            {project.category}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center text-gray-300">
-                          <User className="w-4 h-4 mr-2 text-blue-400" />
-                          <span className="text-sm">{project.client}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                            project.status
-                          )}`}
-                        >
-                          {project.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center text-gray-300">
-                          <Calendar className="w-4 h-4 mr-2 text-green-400" />
-                          <span className="text-sm">
-                            {project.completedDate}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => openProjectModal(project)}
-                          className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-purple-600/20 to-teal-600/20 hover:from-purple-600/30 hover:to-teal-600/30 text-purple-300 hover:text-white rounded-lg text-sm font-medium transition-all duration-200 border border-purple-500/30 hover:border-purple-500/50"
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          {/* Projects Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projectsData.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                onViewDetails={openProjectModal}
+              />
+            ))}
           </div>
 
           {/* Projects Summary */}
@@ -707,7 +635,7 @@ function App() {
                 </span>
               </div>
               <p className="text-sm text-gray-400">
-                Carlo Musongela - Based in Luanda, Angola
+                Carlo Musongela - Based in Kinshasa, DR CONGO
               </p>
               <p className="text-xs text-gray-500 mt-1">
                 © 2024 I'mcleroi01. All rights reserved.
@@ -747,6 +675,12 @@ function App() {
         onClose={() => setIsSuccessModalOpen(false)}
         title="Message Sent Successfully!"
         message="Thank you for your message! I'll get back to you soon."
+      />
+
+      {/* WhatsApp Floating Button */}
+      <WhatsAppButton
+        phoneNumber="+243803122782"
+        message="Bonjour Carlo! Je suis intéressé par vos services de développement."
       />
     </div>
   );
