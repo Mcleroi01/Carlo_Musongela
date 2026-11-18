@@ -1,3 +1,14 @@
+# Brancher le portfolio sur Supabase (procédure complète)
+
+1. **Projet** : sur supabase.com, créez (ou restaurez) le projet. Dans *Project Settings → API*, copiez l'URL du projet et la clé *publishable*.
+2. **Variables** : mettez-les dans `.env` (local) **et** dans les variables d'environnement de Netlify (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`), puis relancez `npm run dev` / redéployez.
+3. **Schéma** : dans le SQL Editor, exécutez dans l'ordre `migrations/20261013143000_create_portfolio_schema.sql` puis `migrations/20261118120000_add_content_translations.sql`.
+4. **Administrateur** : suivez la section « Étapes manuelles » ci-dessous (création du compte + ligne dans `admin_users`).
+5. **Contenu initial** (facultatif) : `seed_static_portfolio.sql` puis `seed_cv_and_translations.sql`, chacun d'abord en mode `preview`, puis `apply`.
+6. **Gestion** : connectez-vous sur `/admin` pour modifier profil, projets, services, expériences, formations et compétences, en anglais et en français.
+
+Tant que Supabase est injoignable, le site public affiche son contenu intégré ; les messages d'état « [dev] » n'apparaissent qu'en développement.
+
 # Premier administrateur Supabase
 
 Cette procédure décrit l'amorçage manuel du premier administrateur. Elle ne crée aucun compte et n'exécute aucune migration par elle-même. Aucun mot de passe, jeton ou clé secrète ne doit être placé dans ce dépôt ou dans le frontend.

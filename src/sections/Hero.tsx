@@ -6,6 +6,8 @@ import { scrollToId } from "../components/motion/SmoothScroll";
 import { photos, yearsOfExperience } from "../data/resume";
 import type { ProfileRecord } from "../types/portfolio";
 import { useI18n } from "../i18n/context";
+import { localized } from "../lib/content";
+import { publicAssetUrl } from "../services/portfolio";
 
 interface HeroProps {
   profile: ProfileRecord;
@@ -13,12 +15,17 @@ interface HeroProps {
 }
 
 export function Hero({ profile, fallback }: HeroProps) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const root = useRef<HTMLElement>(null);
-  // The static profile copy is translated; a bio/headline entered in Supabase is shown as-is.
-  const isStatic = (value: string | null, staticValue: string | null) => !value || value === staticValue;
-  const bio = isStatic(profile.bio, fallback.bio) ? t.hero.bio : profile.bio;
-  const headline = isStatic(profile.headline, fallback.headline) ? t.hero.defaultHeadline : profile.headline;
+  // Text saved in Supabase wins (with its French translation); the built-in copy is used
+  // when the profile still holds the original static text.
+  const pick = (field: "bio" | "headline", staticText: string) => {
+    const value = localized(profile, field, lang);
+    return !value || value === fallback[field] ? staticText : value;
+  };
+  const bio = pick("bio", t.hero.bio);
+  const headline = pick("headline", t.hero.defaultHeadline);
+  const avatar = publicAssetUrl(profile.avatar_path);
   const languages = profile.languages.length ? profile.languages : fallback.languages;
 
   useGSAP(
@@ -50,12 +57,6 @@ export function Hero({ profile, fallback }: HeroProps) {
         yPercent: 12,
         ease: "none",
         scrollTrigger: { trigger: root.current, start: "top top", end: "bottom top", scrub: true },
-      });
-      gsap.to("[data-hero-copy]", {
-        y: -80,
-        autoAlpha: 0.2,
-        ease: "none",
-        scrollTrigger: { trigger: root.current, start: "center center", end: "bottom top", scrub: true },
       });
 
       // Gentle idle float on the badges.
@@ -168,10 +169,10 @@ export function Hero({ profile, fallback }: HeroProps) {
             className="relative aspect-[4/5] overflow-hidden rounded-[28px] border border-white/10 bg-gray-800"
           >
             <img
-              src={photos.hero.src}
-              srcSet={photos.hero.srcSet}
+              src={avatar || photos.hero.src}
+              srcSet={avatar ? undefined : photos.hero.srcSet}
               sizes="(min-width: 1024px) 40vw, 90vw"
-              alt="Carlo Musongela"
+              alt={profile.display_name}
               {...{ fetchpriority: "high" }}
               className="h-[115%] w-full object-cover object-top -mt-[7%]"
             />

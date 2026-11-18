@@ -1,13 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import {
   ArrowLeft,
-  ArrowUpRight,
-  Check,
   AlertCircle,
   HelpCircle,
-  ExternalLink,
   Fingerprint,
-  LayoutDashboard,
   Loader2,
   LockKeyhole,
   LogOut,
@@ -17,6 +13,7 @@ import {
 import { Link } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
+import { AdminDashboard } from "./admin/AdminDashboard";
 
 type AdminState = "checking" | "signed-out" | "authorized" | "forbidden" | "verification-error";
 
@@ -26,11 +23,6 @@ function authorizationErrorMessage(error: { code?: string; message?: string }) {
     return "La table admin_users n'existe pas ou n'est pas accessible. Vérifiez que la migration Supabase a été appliquée et que ses politiques RLS sont en place.";
   }
   return "La vérification des droits administrateur a échoué. Vérifiez la configuration Supabase et réessayez.";
-}
-
-function getInitials(email: string | undefined) {
-  if (!email) return "CM";
-  return email.slice(0, 1).toUpperCase();
 }
 
 export function AdminPage() {
@@ -283,112 +275,5 @@ export function AdminPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 md:flex">
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white md:flex">
-        <Link to="/" className="flex h-[72px] items-center gap-3 border-b border-slate-200 px-5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-xs font-bold tracking-wide text-white">CM</span>
-          <span>
-            <span className="block text-sm font-semibold tracking-tight">Carlo Musongela</span>
-            <span className="block text-xs text-slate-500">Portfolio admin</span>
-          </span>
-        </Link>
-
-        <nav className="flex-1 px-3 py-6" aria-label="Navigation d’administration">
-          <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Espace de travail</p>
-          <a href="#overview" aria-current="page" className="flex min-h-10 items-center gap-3 rounded-md bg-teal-50 px-3 text-sm font-semibold text-teal-900">
-            <LayoutDashboard className="h-[18px] w-[18px]" aria-hidden="true" />
-            Vue d’ensemble
-          </a>
-        </nav>
-
-        <div className="border-t border-slate-200 p-3">
-          <a href="/" className="flex min-h-10 items-center gap-3 rounded-md px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950">
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-            Voir le portfolio
-          </a>
-          <button type="button" onClick={handleLogout} className="mt-1 flex min-h-10 w-full items-center gap-3 rounded-md px-3 text-left text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700">
-            <LogOut className="h-4 w-4" aria-hidden="true" />
-            Se déconnecter
-          </button>
-        </div>
-      </aside>
-
-      <div className="min-w-0 flex-1">
-        <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto flex min-h-[72px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-900 text-xs font-bold tracking-wide text-white md:hidden">CM</span>
-              <div>
-                <p className="hidden text-xs text-slate-500 sm:block">Administration <span className="px-1.5 text-slate-300">/</span> Vue d’ensemble</p>
-                <p className="text-sm font-semibold text-slate-900 sm:mt-1">Vue d’ensemble</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4">
-              <a href="/" className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700">
-                <span className="hidden sm:inline">Portfolio public</span>
-                <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-              </a>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-teal-200 bg-teal-50 text-sm font-semibold text-teal-900" aria-label={`Compte ${user?.email ?? "administrateur"}`}>
-                {getInitials(user?.email)}
-              </span>
-              <button type="button" onClick={handleLogout} className="inline-flex h-9 items-center gap-2 rounded-md px-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 sm:px-3">
-                <LogOut className="h-4 w-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Déconnexion</span>
-              </button>
-            </div>
-          </div>
-          <nav className="border-t border-slate-100 px-4 py-2 md:hidden" aria-label="Navigation d’administration">
-            <a href="#overview" aria-current="page" className="inline-flex min-h-9 items-center gap-2 rounded-md bg-teal-50 px-3 text-sm font-semibold text-teal-900">
-              <LayoutDashboard className="h-4 w-4" aria-hidden="true" />
-              Vue d’ensemble
-            </a>
-          </nav>
-        </header>
-
-        <main id="overview" className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          <div className="mb-8">
-            <p className="text-sm font-medium text-teal-800">Espace sécurisé</p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Bienvenue dans votre espace</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Votre identité et vos droits administrateur ont été vérifiés par Supabase.</p>
-          </div>
-
-          <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm" aria-labelledby="access-title">
-            <div className="flex flex-col gap-6 p-5 sm:flex-row sm:items-start sm:justify-between sm:p-7">
-              <div className="flex items-start gap-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-800">
-                  <Check className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <div>
-                  <h2 id="access-title" className="text-base font-semibold text-slate-950">Accès administrateur confirmé</h2>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">{user?.email ?? "Compte administrateur"}</p>
-                  <p className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">
-                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-                    Administrateur actif
-                  </p>
-                </div>
-              </div>
-              <a href="/" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-md border border-slate-300 px-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-700">
-                Ouvrir le portfolio
-                <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-              </a>
-            </div>
-          </section>
-
-          <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5 sm:p-7" aria-labelledby="content-title">
-            <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Prochaine étape</p>
-              <h2 id="content-title" className="mt-2 text-lg font-semibold tracking-tight text-slate-950">Gestion des contenus non activée</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Les écrans de gestion ne sont pas encore disponibles. Aucune statistique ni donnée de contenu n’est affichée ici tant qu’elle n’est pas chargée depuis Supabase.</p>
-            </div>
-          </section>
-
-          <footer className="mt-8 flex flex-col gap-2 border-t border-slate-200 pt-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-            <span>Carlo Musongela · Administration</span>
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />Accès contrôlé par Supabase Auth et RLS</span>
-          </footer>
-        </main>
-      </div>
-    </div>
-  );
+  return <AdminDashboard email={user?.email} onLogout={handleLogout} />;
 }

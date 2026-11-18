@@ -1,4 +1,4 @@
-﻿import React, { Suspense, lazy, useState } from "react";
+﻿import React, { Suspense, lazy, useMemo, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import {
   Code2,
@@ -31,15 +31,38 @@ import { TechMarquee } from "./sections/TechMarquee";
 import { SectionHeading } from "./sections/SectionHeading";
 import { projectsData } from "./data/projects";
 import { staticProfile } from "./data/profile";
-import { photos } from "./data/resume";
+import { CV_URL, photos } from "./data/resume";
+import { localized, toEducationView, toJobView } from "./lib/content";
 import { useI18n } from "./i18n/context";
 import { usePortfolioData } from "./hooks/usePortfolioData";
 import {
   getPublicProfile,
+  getPublishedExperiences,
+  getPublishedFormations,
   getPublishedProjects,
   getPublishedServiceCards,
+  getPublishedSkills,
+  publicAssetUrl,
 } from "./services/portfolio";
-import type { Project, ServiceCardData } from "./types/portfolio";
+import type {
+  ExperienceRecord,
+  FormationRecord,
+  Project,
+  ServiceCardData,
+  SkillRecord,
+} from "./types/portfolio";
+
+const DEFAULT_PHONE = "+243803122782";
+const DEFAULT_EMAIL = "Carlomusongela1@gmail.com";
+const emptyExperiences: ExperienceRecord[] = [];
+const emptyFormations: FormationRecord[] = [];
+const emptySkills: SkillRecord[] = [];
+
+/** Backend status notes are for the site owner: shown while developing, never to visitors. */
+function DevNotice({ children }: { children: React.ReactNode }) {
+  if (!import.meta.env.DEV) return null;
+  return <p role="status" className="mb-6 text-center text-sm text-amber-300">[dev] {children}</p>;
+}
 
 const AdminPage = lazy(() => import("./pages/AdminPage").then((m) => ({ default: m.AdminPage })));
 
@@ -57,7 +80,7 @@ const labelClass =
   "pointer-events-none absolute left-4 top-2 text-xs text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:text-xs peer-focus:text-purple-300";
 
 function PublicPortfolio() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -66,8 +89,26 @@ function PublicPortfolio() {
   const projectState = usePortfolioData(getPublishedProjects, projectsData);
   const serviceState = usePortfolioData(getPublishedServiceCards, emptyServiceFallback);
   const profileState = usePortfolioData(getPublicProfile, staticProfile);
+  const experienceState = usePortfolioData(getPublishedExperiences, emptyExperiences);
+  const formationState = usePortfolioData(getPublishedFormations, emptyFormations);
+  const skillState = usePortfolioData(getPublishedSkills, emptySkills);
   const profile = profileState.data ?? staticProfile;
   const serviceCards = serviceState.data;
+
+  // Supabase rows replace the CV copy once they load; on error the static copy stays.
+  const jobs = useMemo(
+    () => (experienceState.source === "supabase" ? experienceState.data.map((r) => toJobView(r, lang, t)) : undefined),
+    [experienceState, lang, t],
+  );
+  const education = useMemo(
+    () => (formationState.source === "supabase" ? formationState.data.map((r) => toEducationView(r, lang, t)) : undefined),
+    [formationState, lang, t],
+  );
+  const skills = skillState.source === "supabase" && skillState.data.length ? skillState.data.map((s) => s.name) : undefined;
+
+  const phone = profile.whatsapp_number || DEFAULT_PHONE;
+  const email = profile.contact_email || DEFAULT_EMAIL;
+  const cvUrl = publicAssetUrl(profile.cv_path) || CV_URL;
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -125,17 +166,17 @@ function PublicPortfolio() {
         />
       </div>
 
-      <Navbar />
+      <Navbar cvUrl={cvUrl} />
 
       <main>
         <Hero profile={profile} fallback={staticProfile} />
         {profileState.error && (
-          <p role="status" className="relative z-10 -mt-10 mb-6 text-center text-sm text-amber-300">
-            {t.hero.profileError}
-          </p>
+          <div className="relative z-10 -mt-10">
+            <DevNotice>{t.hero.profileError} ({profileState.error})</DevNotice>
+          </div>
         )}
 
-        <TechMarquee />
+        <TechMarquee items={skills} />
         <About projectCount={projectState.data.length} />
 
         <div className="relative z-10 py-10">
@@ -155,7 +196,7 @@ function PublicPortfolio() {
               description={t.services.description}
             />
 
-            {serviceState.error && <p role="status" className="mb-6 text-center text-sm text-amber-300">{t.services.error}</p>}
+            {serviceState.error && <DevNotice>{t.services.error}</DevNotice>}
             {serviceState.isLoading && <p role="status" className="mb-6 text-center text-sm text-gray-400">{t.services.loading}</p>}
 
             {serviceState.source === "static" && (
@@ -192,11 +233,14 @@ function PublicPortfolio() {
             {serviceState.source === "supabase" && serviceCards.length > 0 && (
               <RevealGroup className="grid md:grid-cols-3 gap-6">
                 {serviceCards.map((service) => (
-                  <RevealItem key={service.id} className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 hover:border-purple-400/40 transition-colors">
-                    <h3 className="font-display text-xl font-semibold mb-4">{service.title}</h3>
-                    <p className="text-gray-400">{service.description}</p>
+                  <RevealItem key={service.id} className="group rounded-3xl border border-white/10 bg-white/[0.03] p-8 hover:border-purple-400/40 transition-colors">
+                    <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 to-teal-600 shadow-lg transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110">
+                      <CheckCircle2 className="h-6 w-6 text-white" />
+                    </div>
+                    <h3 className="font-display text-xl font-semibold mb-4">{localized(service, "title", lang)}</h3>
+                    {localized(service, "description", lang) && <p className="text-gray-400">{localized(service, "description", lang)}</p>}
                     {service.cta_url && service.cta_label && (
-                      <a href={service.cta_url} className="inline-block mt-6 text-purple-300 hover:text-white">{service.cta_label}</a>
+                      <a href={service.cta_url} className="inline-block mt-6 text-purple-300 hover:text-white">{localized(service, "cta_label", lang)}</a>
                     )}
                   </RevealItem>
                 ))}
@@ -205,7 +249,7 @@ function PublicPortfolio() {
           </div>
         </section>
 
-        <Experience />
+        <Experience jobs={jobs} education={education} />
         <Projects state={projectState} onOpen={openProjectModal} />
 
         {/* Contact */}
@@ -234,17 +278,17 @@ function PublicPortfolio() {
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/60 to-gray-950/10" />
                 <div className="relative flex h-full flex-col justify-end p-8 gap-4">
                   <p className="font-display text-2xl font-semibold">{t.contact.tagline}</p>
-                  <a href="tel:+243803122782" className="flex items-center gap-3 text-gray-200 hover:text-white">
-                    <Phone className="h-5 w-5 text-teal-300" /> +243 803 122 782
+                  <a href={`tel:${phone.replace(/\s/g, "")}`} className="flex items-center gap-3 text-gray-200 hover:text-white">
+                    <Phone className="h-5 w-5 text-teal-300" /> {phone}
                   </a>
-                  <a href="mailto:Carlomusongela1@gmail.com" className="flex items-center gap-3 text-gray-200 hover:text-white break-all">
-                    <Mail className="h-5 w-5 text-teal-300" /> Carlomusongela1@gmail.com
+                  <a href={`mailto:${email}`} className="flex items-center gap-3 text-gray-200 hover:text-white break-all">
+                    <Mail className="h-5 w-5 text-teal-300" /> {email}
                   </a>
                   <div className="flex gap-4 pt-2">
-                    <a href="https://github.com/Mcleroi01" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="rounded-full border border-white/15 p-2.5 hover:bg-white/10">
+                    <a href={profile.github_url ?? "https://github.com/Mcleroi01"} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="rounded-full border border-white/15 p-2.5 hover:bg-white/10">
                       <Github className="h-5 w-5" />
                     </a>
-                    <a href="https://linkedin.com/in/carlo-musongela-bb024b202" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="rounded-full border border-white/15 p-2.5 hover:bg-white/10">
+                    <a href={profile.linkedin_url ?? "https://linkedin.com/in/carlo-musongela-bb024b202"} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="rounded-full border border-white/15 p-2.5 hover:bg-white/10">
                       <Linkedin className="h-5 w-5" />
                     </a>
                   </div>
@@ -314,7 +358,7 @@ function PublicPortfolio() {
         message={t.contact.successMessage}
         closeLabel={t.projects.modal.close}
       />
-      <WhatsAppButton phoneNumber="+243803122782" />
+      <WhatsAppButton phoneNumber={phone.replace(/[^\d+]/g, "")} />
     </div>
   );
 }

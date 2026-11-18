@@ -38,7 +38,7 @@ function LanguageToggle() {
   );
 }
 
-export function Navbar() {
+export function Navbar({ cvUrl = CV_URL }: { cvUrl?: string }) {
   const { t } = useI18n();
   const links = sectionIds.map((id) => ({ id, label: t.nav[id] }));
   const [open, setOpen] = useState(false);
@@ -109,7 +109,7 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3">
           <LanguageToggle />
           <a
-            href={CV_URL}
+            href={cvUrl}
             download="Musongela_Carlo_CV.pdf"
             title={t.nav.downloadCv}
             className="inline-flex items-center gap-2 rounded-full bg-white text-gray-950 px-4 xl:px-5 py-2 text-sm font-semibold hover:bg-purple-100 transition-colors"
@@ -157,7 +157,7 @@ export function Navbar() {
                 </motion.button>
               ))}
               <a
-                href={CV_URL}
+                href={cvUrl}
                 download="Musongela_Carlo_CV.pdf"
                 className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-white text-gray-950 px-5 py-3 font-semibold"
               >

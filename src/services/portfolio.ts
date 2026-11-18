@@ -23,7 +23,8 @@ function queryFailure<T>(error: { message: string }): PortfolioResult<T> {
   return { data: null, error: error.message };
 }
 
-function publicAssetUrl(path: string | null): string {
+/** Resolves a Storage path from the public bucket (or passes a full URL through). */
+export function publicAssetUrl(path: string | null | undefined): string {
   if (!path || !supabase) return "";
   if (/^https?:\/\//i.test(path)) return path;
   return supabase.storage.from("portfolio-public").getPublicUrl(path).data.publicUrl;
@@ -44,6 +45,7 @@ const projectCategory = {
 } as const;
 
 function toProject(row: ProjectRecord): Project {
+  const fr = row.translations?.fr ?? {};
   return {
     id: row.id,
     title: row.title,
@@ -59,6 +61,16 @@ function toProject(row: ProjectRecord): Project {
     liveUrl: row.live_url ?? undefined,
     image: publicAssetUrl(row.cover_image_path),
     category: projectCategory[row.category],
+    i18n: {
+      fr: {
+        title: fr.title,
+        description: fr.short_description,
+        longDescription: fr.long_description,
+        client: fr.client,
+        duration: fr.duration,
+        completedDate: fr.completed_date,
+      },
+    },
   };
 }
 
@@ -66,7 +78,7 @@ export async function getPublishedProjects(): Promise<PortfolioResult<Project[]>
   if (!isSupabaseConfigured || !supabase) return unavailable();
   const { data, error } = await supabase
     .from("projects")
-    .select("id,title,slug,short_description,long_description,category,status,client,duration,team_size,completed_date,technologies,cover_image_path,github_url,live_url,display_order,published_at,archived_at,created_at,updated_at")
+    .select("id,title,slug,short_description,long_description,category,status,client,duration,team_size,completed_date,technologies,cover_image_path,github_url,live_url,display_order,published_at,archived_at,created_at,updated_at,translations")
     .not("published_at", "is", null)
     .is("archived_at", null)
     .order("display_order", { ascending: true })
@@ -79,7 +91,7 @@ export async function getPublicProfile(): Promise<PortfolioResult<ProfileRecord 
   if (!isSupabaseConfigured || !supabase) return unavailable();
   const { data, error } = await supabase
     .from("profiles")
-    .select("id,display_name,headline,bio,location,languages,avatar_path,cv_path,github_url,linkedin_url,whatsapp_number,contact_email,is_public,created_at,updated_at")
+    .select("id,display_name,headline,bio,location,languages,avatar_path,cv_path,github_url,linkedin_url,whatsapp_number,contact_email,is_public,created_at,updated_at,translations")
     .eq("is_public", true)
     .limit(1)
     .maybeSingle();
@@ -100,12 +112,12 @@ async function getPublishedRows<T>(table: string, columns: string, orderColumn: 
 }
 
 export function getPublishedServices() {
-  return getPublishedRows<ServiceRecord>("services", "id,title,slug,description,image_path,price_label,cta_label,cta_url,display_order,published_at,archived_at,created_at,updated_at", "display_order");
+  return getPublishedRows<ServiceRecord>("services", "id,title,slug,description,image_path,price_label,cta_label,cta_url,display_order,published_at,archived_at,created_at,updated_at,translations", "display_order");
 }
 
 export async function getPublishedServiceCards(): Promise<PortfolioResult<ServiceCardData[]>> {
   const result = await getPublishedServices();
-  if (result.error) return result;
+  if (result.error !== null) return result;
   return {
     data: result.data.map((service) => ({
       id: service.id,
@@ -113,17 +125,18 @@ export async function getPublishedServiceCards(): Promise<PortfolioResult<Servic
       description: service.description ?? "",
       cta_label: service.cta_label,
       cta_url: service.cta_url,
+      translations: service.translations,
     })),
     error: null,
   };
 }
 
 export function getPublishedExperiences() {
-  return getPublishedRows<ExperienceRecord>("experiences", "id,position,company,description,location,start_date,end_date,is_current,display_order,published_at,archived_at,created_at,updated_at", "display_order");
+  return getPublishedRows<ExperienceRecord>("experiences", "id,position,company,description,location,start_date,end_date,is_current,display_order,published_at,archived_at,created_at,updated_at,translations", "display_order");
 }
 
 export function getPublishedFormations() {
-  return getPublishedRows<FormationRecord>("formations", "id,title,institution,description,start_date,end_date,status,certificate_path,document_url,display_order,published_at,archived_at,created_at,updated_at", "display_order");
+  return getPublishedRows<FormationRecord>("formations", "id,title,institution,description,start_date,end_date,status,certificate_path,document_url,display_order,published_at,archived_at,created_at,updated_at,translations", "display_order");
 }
 
 export function getPublishedSkills() {

@@ -13,7 +13,7 @@ export function WhatsAppButton({
   const { t } = useI18n();
   const handleWhatsAppClick = () => {
     const encodedMessage = encodeURIComponent(message ?? t.whatsapp.message);
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\D/g, "")}?text=${encodedMessage}`;
     window.open(whatsappUrl, "_blank");
   };
 

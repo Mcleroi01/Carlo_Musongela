@@ -60,6 +60,12 @@ const fr: Record<number, Partial<ProjectText>> = {
 };
 
 export function localizeProject(project: Project, lang: Lang): Project {
+  const fromDb = project.i18n?.[lang];
+  if (fromDb) {
+    // Keep only filled-in translations; empty ones fall back to the base text.
+    const filled = Object.fromEntries(Object.entries(fromDb).filter(([, v]) => typeof v === "string" && v.trim()));
+    return { ...project, ...filled };
+  }
   if (lang !== "fr" || typeof project.id !== "number") return project;
   const override = fr[project.id];
   return override ? { ...project, ...override } : project;

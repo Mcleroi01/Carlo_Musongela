@@ -95,6 +95,8 @@ const en = {
     titleHighlight: "education",
     description: "From TV post-production to fullstack engineering: a path built on shipping real products for real users.",
     educationTitle: "Education",
+    present: "Present",
+    empty: "No experience published yet.",
     jobs: [
       {
         role: "Freelance Fullstack Developer",
@@ -311,6 +313,8 @@ const fr: Dictionary = {
     description:
       "De la post-production télé au développement fullstack : un parcours construit en livrant de vrais produits à de vrais utilisateurs.",
     educationTitle: "Formation",
+    present: "Aujourd'hui",
+    empty: "Aucune expérience publiée pour le moment.",
     jobs: [
       {
         role: "Développeur Fullstack Freelance",

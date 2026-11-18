@@ -24,7 +24,7 @@ export function usePortfolioData<T>(
     setState((current) => ({ ...current, isLoading: true, error: null }));
     loader().then((result) => {
       if (!active) return;
-      if (result.error) {
+      if (result.error !== null) {
         setState({ data: fallback, isLoading: false, error: result.error, source: "static" });
       } else {
         setState({ data: result.data, isLoading: false, error: null, source: "supabase" });

@@ -45,7 +45,7 @@ export function Projects({ state, onOpen }: ProjectsProps) {
         />
 
         {state.isLoading && <p role="status" className="mb-6 text-center text-sm text-gray-400">{t.projects.loading}</p>}
-        {state.error && <p role="status" className="mb-6 text-center text-sm text-amber-300">{t.projects.error}</p>}
+        {state.error && import.meta.env.DEV && <p role="status" className="mb-6 text-center text-sm text-amber-300">[dev] {t.projects.error}</p>}
         {state.source === "supabase" && projects.length === 0 && !state.isLoading && (
           <p className="mb-6 text-center text-gray-400">{t.projects.empty}</p>
         )}
