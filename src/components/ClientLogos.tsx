@@ -25,15 +25,7 @@ const ClientLogos: React.FC<ClientLogosProps> = ({ className = "" }) => {
     let pos = 0;
     const speed = 0.8; // Vitesse de défilement (pixels par frame)
     let isPaused = false;
-    let hoverTimeout: NodeJS.Timeout;
-
-    const pauseOnHover = () => {
-      isPaused = true;
-      clearTimeout(hoverTimeout);
-      hoverTimeout = setTimeout(() => {
-        isPaused = false;
-      }, 1000);
-    };
+    let hoverTimeout: ReturnType<typeof setTimeout> | undefined;
 
     const animate = () => {
       if (isPaused) {
@@ -79,18 +71,18 @@ const ClientLogos: React.FC<ClientLogosProps> = ({ className = "" }) => {
     <section className={`  ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8  sm:mx-4 lg:mx-8 xl:mx-16 2xl:mx-32">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-center">
+          <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-center">
             Our Clients
           </h2>
           <div className="w-16 h-1 bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 my-4 mx-auto"></div>
-          <p className="text-gray-600 text-center">
-            Companies that trust our services"
+          <p className="text-gray-400 text-center">
+            Companies that trust our services
           </p>
         </div>
 
         <div
           ref={rowRef}
-          className="overflow-hidden w-full py-6 cursor-grab active:cursor-grabbing"
+          className="overflow-hidden w-full py-6"
           style={{
             maskImage:
               "linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%)",

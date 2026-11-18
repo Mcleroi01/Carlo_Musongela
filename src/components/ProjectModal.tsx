@@ -1,23 +1,7 @@
 import React from "react";
 import { Modal } from "./Modal";
 import { ExternalLink, Github, Calendar, Tag, Users } from "lucide-react";
-
-interface Project {
-  id: number;
-  title: string;
-  description: string;
-  longDescription: string;
-  technologies: string[];
-  status: "Completed" | "In Progress" | "Planned";
-  client: string;
-  duration: string;
-  teamSize: number;
-  completedDate: string;
-  githubUrl?: string;
-  liveUrl?: string;
-  image: string;
-  category: "Web App" | "Mobile App" | "API" | "System";
-}
+import type { Project } from "../types/portfolio";
 
 interface ProjectModalProps {
   isOpen: boolean;
