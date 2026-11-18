@@ -4,9 +4,18 @@ import { gsap, useGSAP, prefersReducedMotion } from "../lib/gsap";
 import { Reveal } from "../components/motion/Reveal";
 import { SectionHeading } from "./SectionHeading";
 import { useI18n } from "../i18n/context";
+import type { EducationView, JobView } from "../lib/content";
 
-export function Experience() {
+interface ExperienceProps {
+  /** Rows from Supabase; `undefined` means "not loaded", so the CV copy is shown. */
+  jobs?: JobView[];
+  education?: EducationView[];
+}
+
+export function Experience({ jobs, education }: ExperienceProps) {
   const { t, lang } = useI18n();
+  const jobList = jobs ?? t.experience.jobs.map((j) => ({ ...j, key: j.period }));
+  const educationList = education ?? t.experience.education.map((e) => ({ ...e, key: e.school + e.year }));
   const ref = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -38,7 +47,7 @@ export function Experience() {
       });
     },
     // Re-run on language change so the per-job triggers target the re-rendered cards.
-    { scope: ref, dependencies: [lang], revertOnUpdate: true },
+    { scope: ref, dependencies: [lang, jobList.length], revertOnUpdate: true },
   );
 
   return (
@@ -62,8 +71,9 @@ export function Experience() {
               className="absolute left-[11px] top-2 bottom-2 w-px origin-top bg-gradient-to-b from-purple-400 via-blue-400 to-teal-400"
             />
             <div className="space-y-10">
-              {t.experience.jobs.map((job) => (
-                <article key={job.period} data-job className="relative">
+              {jobList.length === 0 && <p className="text-gray-400">{t.experience.empty}</p>}
+              {jobList.map((job) => (
+                <article key={job.key} data-job className="relative">
                   <span
                     data-dot
                     className="absolute -left-10 top-1.5 flex h-6 w-6 items-center justify-center rounded-full border border-purple-400/50 bg-gray-950"
@@ -96,8 +106,8 @@ export function Experience() {
               <h3 className="font-display text-xl font-semibold">{t.experience.educationTitle}</h3>
             </div>
             <ul className="divide-y divide-white/5">
-              {t.experience.education.map((e) => (
-                <li key={e.school + e.year} className="py-4 first:pt-0 last:pb-0 flex justify-between gap-4">
+              {educationList.map((e) => (
+                <li key={e.key} className="py-4 first:pt-0 last:pb-0 flex justify-between gap-4">
                   <div>
                     <p className="font-medium text-gray-100">{e.title}</p>
                     <p className="text-sm text-gray-400">{e.school}</p>

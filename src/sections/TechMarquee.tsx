@@ -3,7 +3,7 @@ import { gsap, useGSAP, prefersReducedMotion } from "../lib/gsap";
 import { techStack } from "../data/resume";
 
 /** Infinite tech-stack ribbon; it speeds up and reverses with scroll velocity. */
-export function TechMarquee() {
+export function TechMarquee({ items: names = techStack }: { items?: string[] }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useGSAP(
@@ -25,10 +25,10 @@ export function TechMarquee() {
       window.addEventListener("scroll", onScroll, { passive: true });
       return () => window.removeEventListener("scroll", onScroll);
     },
-    { scope: ref },
+    { scope: ref, dependencies: [names.length], revertOnUpdate: true },
   );
 
-  const items = [...techStack, ...techStack];
+  const items = [...names, ...names];
   return (
     <div
       ref={ref}

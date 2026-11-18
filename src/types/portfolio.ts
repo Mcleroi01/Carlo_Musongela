@@ -17,7 +17,12 @@ export interface Project {
   liveUrl?: string;
   image: string;
   category: ProjectCategory;
+  /** Per-language overrides of the text fields (from the Supabase `translations` column). */
+  i18n?: Partial<Record<"fr" | "en", Partial<Pick<Project, "title" | "description" | "longDescription" | "client" | "duration" | "completedDate">>>>;
 }
+
+/** `translations` column: {"fr": {"column_name": "texte"}}. Missing keys fall back to the base column. */
+export type Translations = Partial<Record<"fr" | "en", Record<string, string>>>;
 
 /** Public row shapes defined by supabase/migrations/20261013143000_create_portfolio_schema.sql. */
 export interface ProfileRecord {
@@ -34,12 +39,14 @@ export interface ProfileRecord {
   whatsapp_number: string | null;
   contact_email: string | null;
   is_public: boolean;
+  translations?: Translations;
   created_at: string;
   updated_at: string;
 }
 
 interface PublishedRecord {
   id: string;
+  translations?: Translations;
   display_order: number;
   published_at: string | null;
   archived_at: string | null;
@@ -107,6 +114,7 @@ export interface ServiceCardData {
   description: string;
   cta_label?: string | null;
   cta_url?: string | null;
+  translations?: Translations;
 }
 
 export interface PromotionRecord extends PublishedRecord {
