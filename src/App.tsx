@@ -1,74 +1,100 @@
-import React, { useState } from "react";
+﻿import React, { Suspense, lazy, useState } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import {
   Code2,
-  Globe,
+  CheckCircle2,
   Smartphone,
   Database,
   Mail,
   Github,
   Linkedin,
-  MapPin,
-  Languages,
   Send,
-  Menu,
-  X,
-  ExternalLink,
+  Phone,
+  ArrowUp,
+  Loader2,
 } from "lucide-react";
 import { ProjectModal } from "./components/ProjectModal";
 import { SuccessModal } from "./components/SuccessModal";
 import { WhatsAppButton } from "./components/WhatsAppButton";
-import { ProjectCard } from "./components/ProjectCard";
 import { MouseFollower } from "./components/MouseFollower";
-import { projectsData, Project } from "./data/projects";
 import ClientLogos from "./components/ClientLogos";
+import { SmoothScroll, scrollToId } from "./components/motion/SmoothScroll";
+import { ScrollProgress } from "./components/motion/ScrollProgress";
+import { Reveal, RevealGroup, RevealItem } from "./components/motion/Reveal";
+import { Magnetic } from "./components/motion/Magnetic";
+import { Navbar } from "./sections/Navbar";
+import { Hero } from "./sections/Hero";
+import { About } from "./sections/About";
+import { Experience } from "./sections/Experience";
+import { Projects } from "./sections/Projects";
+import { TechMarquee } from "./sections/TechMarquee";
+import { SectionHeading } from "./sections/SectionHeading";
+import { projectsData } from "./data/projects";
+import { staticProfile } from "./data/profile";
+import { photos } from "./data/resume";
+import { useI18n } from "./i18n/context";
+import { usePortfolioData } from "./hooks/usePortfolioData";
+import {
+  getPublicProfile,
+  getPublishedProjects,
+  getPublishedServiceCards,
+} from "./services/portfolio";
+import type { Project, ServiceCardData } from "./types/portfolio";
 
-function App() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+const AdminPage = lazy(() => import("./pages/AdminPage").then((m) => ({ default: m.AdminPage })));
+
+const emptyServiceFallback: ServiceCardData[] = [];
+
+const serviceStyles = [
+  { icon: Code2, accent: "from-purple-600 to-blue-600" },
+  { icon: Database, accent: "from-teal-600 to-emerald-600" },
+  { icon: Smartphone, accent: "from-blue-600 to-purple-600" },
+];
+
+const inputClass =
+  "peer w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 pt-6 pb-2 text-white placeholder-transparent focus:outline-none focus:border-purple-400/60 focus:bg-white/[0.06] transition-colors";
+const labelClass =
+  "pointer-events-none absolute left-4 top-2 text-xs text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:text-xs peer-focus:text-purple-300";
+
+function PublicPortfolio() {
+  const { t } = useI18n();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    message: "",
-  });
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const projectState = usePortfolioData(getPublishedProjects, projectsData);
+  const serviceState = usePortfolioData(getPublishedServiceCards, emptyServiceFallback);
+  const profileState = usePortfolioData(getPublicProfile, staticProfile);
+  const profile = profileState.data ?? staticProfile;
+  const serviceCards = serviceState.data;
+  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const response = await fetch("https://formspree.io/f/xwpbnrgk", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: formData.name,
-        email: formData.email,
-        message: formData.message,
-      }),
-    });
-
-    if (response.ok) {
-      setIsSuccessModalOpen(true);
-      setFormData({ name: "", email: "", message: "" });
-    } else {
-      setIsSuccessModalOpen(false);
+    setIsSending(true);
+    setSendError(null);
+    try {
+      const response = await fetch("https://formspree.io/f/xwpbnrgk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(formData),
+      });
+      if (response.ok) {
+        setIsSuccessModalOpen(true);
+        setFormData({ name: "", email: "", message: "" });
+      } else {
+        setSendError(t.contact.sendError);
+      }
+    } catch {
+      setSendError(t.contact.networkError);
+    } finally {
+      setIsSending(false);
     }
-  };
-
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    element?.scrollIntoView({ behavior: "smooth" });
-    setIsMenuOpen(false);
   };
 
   const openProjectModal = (project: Project) => {
@@ -76,613 +102,239 @@ function App() {
     setIsProjectModalOpen(true);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return "bg-green-500/20 text-green-400 border-green-500/30";
-      case "In Progress":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      case "Planned":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
-      default:
-        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
-    }
-  };
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case "Web App":
-        return <Globe className="w-4 h-4" />;
-      case "Mobile App":
-        return <Smartphone className="w-4 h-4" />;
-      case "API":
-        return <Database className="w-4 h-4" />;
-      case "System":
-        return <Code2 className="w-4 h-4" />;
-      default:
-        return <Code2 className="w-4 h-4" />;
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gray-900 text-white relative overflow-hidden">
-      {/* Mouse Follower Effect */}
+    <div className="min-h-screen bg-gray-950 text-white relative overflow-x-clip">
+      <SmoothScroll />
+      <ScrollProgress />
       <MouseFollower />
 
-      {/* Animated Neon Corridor Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        {/* Base gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-blue-900/20 to-teal-900/30" />
-
-        {/* Neon corridor effect */}
-        <div className="absolute inset-0">
-          {/* Central corridor light */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-purple-500/20 via-blue-500/10 to-transparent rounded-full blur-3xl animate-pulse-slow" />
-
-          {/* Side neon strips */}
-          <div className="absolute top-0 left-1/4 w-1 h-full bg-gradient-to-b from-transparent via-purple-400/30 to-transparent blur-sm animate-glow" />
-          <div className="absolute top-0 right-1/4 w-1 h-full bg-gradient-to-b from-transparent via-teal-400/30 to-transparent blur-sm animate-glow-delayed" />
-
-          {/* Floating orbs */}
-          <div className="absolute top-1/4 left-1/3 w-32 h-32 bg-gradient-radial from-blue-400/15 to-transparent rounded-full blur-2xl animate-float" />
-          <div className="absolute bottom-1/4 right-1/3 w-24 h-24 bg-gradient-radial from-purple-400/15 to-transparent rounded-full blur-2xl animate-float-delayed" />
-          <div className="absolute top-3/4 left-1/5 w-20 h-20 bg-gradient-radial from-teal-400/15 to-transparent rounded-full blur-xl animate-float-slow" />
-
-          {/* Corridor perspective lines */}
-          <div className="absolute inset-0">
-            <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-400/20 to-transparent transform -skew-y-1 blur-sm" />
-            <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/20 to-transparent transform skew-y-1 blur-sm" />
-          </div>
-
-          {/* Grid pattern overlay */}
-          <div className="absolute inset-0 opacity-10">
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `
-                linear-gradient(rgba(139, 92, 246, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(139, 92, 246, 0.1) 1px, transparent 1px)
-              `,
-                backgroundSize: "50px 50px",
-              }}
-            />
-          </div>
-        </div>
+      {/* Ambient background */}
+      <div aria-hidden className="fixed inset-0 pointer-events-none">
+        <div className="absolute -top-40 -left-40 h-[36rem] w-[36rem] rounded-full bg-purple-700/20 blur-[120px] animate-float" />
+        <div className="absolute top-1/3 -right-40 h-[32rem] w-[32rem] rounded-full bg-teal-600/15 blur-[120px] animate-float-delayed" />
+        <div className="absolute bottom-0 left-1/3 h-[28rem] w-[28rem] rounded-full bg-blue-700/15 blur-[120px] animate-float-slow" />
+        <div
+          className="absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+            maskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+            WebkitMaskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+          }}
+        />
       </div>
 
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-gray-900/80 backdrop-blur-md border-b border-gray-800/50 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <Code2 className="h-8 w-8 text-purple-400" />
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-teal-400 bg-clip-text text-transparent">
-                I'mcleroi01
-              </span>
-            </div>
+      <Navbar />
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <button
-                onClick={() => scrollToSection("home")}
-                className="text-gray-300 hover:text-white transition-colors duration-200 relative group"
-              >
-                Home
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-teal-400 group-hover:w-full transition-all duration-300"></span>
-              </button>
-              <button
-                onClick={() => scrollToSection("services")}
-                className="text-gray-300 hover:text-white transition-colors duration-200 relative group"
-              >
-                Services
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-teal-400 group-hover:w-full transition-all duration-300"></span>
-              </button>
-              <button
-                onClick={() => scrollToSection("projects")}
-                className="text-gray-300 hover:text-white transition-colors duration-200 relative group"
-              >
-                Projects
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-teal-400 group-hover:w-full transition-all duration-300"></span>
-              </button>
-              <button
-                onClick={() => scrollToSection("contact")}
-                className="text-gray-300 hover:text-white transition-colors duration-200 relative group"
-              >
-                Contact
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-teal-400 group-hover:w-full transition-all duration-300"></span>
-              </button>
-
-              <a
-                href="/Musongela_carlo.pdf"
-                download
-                className="bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
-              >
-                Download CV
-              </a>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-gray-300 hover:text-white"
-              >
-                {isMenuOpen ? (
-                  <X className="h-6 w-6" />
-                ) : (
-                  <Menu className="h-6 w-6" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden bg-gray-900/95 backdrop-blur-md border-t border-gray-800/50">
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              <button
-                onClick={() => scrollToSection("home")}
-                className="block px-3 py-2 text-gray-300 hover:text-white transition-colors duration-200"
-              >
-                Home
-              </button>
-              <button
-                onClick={() => scrollToSection("services")}
-                className="block px-3 py-2 text-gray-300 hover:text-white transition-colors duration-200"
-              >
-                Services
-              </button>
-              <button
-                onClick={() => scrollToSection("projects")}
-                className="block px-3 py-2 text-gray-300 hover:text-white transition-colors duration-200"
-              >
-                Projects
-              </button>
-              <button
-                onClick={() => scrollToSection("contact")}
-                className="block px-3 py-2 text-gray-300 hover:text-white transition-colors duration-200"
-              >
-                Contact
-              </button>
-
-              <div className="mt-4 mb-4">
-                <a
-                  href="/Musongela_carlo.pdf"
-                  download
-                  className="bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
-                >
-                  Download CV
-                </a>
-              </div>
-            </div>
-          </div>
+      <main>
+        <Hero profile={profile} fallback={staticProfile} />
+        {profileState.error && (
+          <p role="status" className="relative z-10 -mt-10 mb-6 text-center text-sm text-amber-300">
+            {t.hero.profileError}
+          </p>
         )}
-      </nav>
 
-      {/* Hero Section */}
-      <section
-        id="home"
-        className="relative m-4 min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-16"
-      >
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="mb-8">
-            <div className="w-32 h-32 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500 to-teal-500 p-1 shadow-2xl shadow-purple-500/25">
-              <div className="w-full h-full rounded-full bg-gray-900 flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 to-teal-400/10 animate-pulse-slow"></div>
+        <TechMarquee />
+        <About projectCount={projectState.data.length} />
 
-                {/* Image de profil */}
+        <div className="relative z-10 py-10">
+          <ClientLogos />
+        </div>
+
+        {/* Services */}
+        <section id="services" className="py-28 px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-7xl mx-auto">
+            <SectionHeading
+              eyebrow={t.services.eyebrow}
+              title={
+                <>
+                  {t.services.titleStart} <span className="gradient-text">{t.services.titleHighlight}</span>
+                </>
+              }
+              description={t.services.description}
+            />
+
+            {serviceState.error && <p role="status" className="mb-6 text-center text-sm text-amber-300">{t.services.error}</p>}
+            {serviceState.isLoading && <p role="status" className="mb-6 text-center text-sm text-gray-400">{t.services.loading}</p>}
+
+            {serviceState.source === "static" && (
+              <RevealGroup className="grid md:grid-cols-3 gap-6" stagger={0.12}>
+                {t.services.cards.map(({ title, text, items }, i) => {
+                  const { icon: Icon, accent } = serviceStyles[i % serviceStyles.length];
+                  return (
+                  <RevealItem
+                    key={i}
+                    className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 hover:border-purple-400/40 transition-colors"
+                  >
+                    <div className={`absolute -top-24 -right-24 h-48 w-48 rounded-full bg-gradient-to-br ${accent} opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-30`} />
+                    <div className={`mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${accent} shadow-lg transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110`}>
+                      <Icon className="h-6 w-6 text-white" />
+                    </div>
+                    <h3 className="font-display text-xl font-semibold mb-3">{title}</h3>
+                    <p className="text-gray-400 mb-6">{text}</p>
+                    <ul className="space-y-3 text-sm text-gray-300">
+                      {items.map((item) => (
+                        <li key={item} className="flex items-center gap-3">
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-teal-300" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </RevealItem>
+                  );
+                })}
+              </RevealGroup>
+            )}
+            {serviceState.source === "supabase" && serviceCards.length === 0 && (
+              <p className="text-center text-gray-400">{t.services.empty}</p>
+            )}
+            {serviceState.source === "supabase" && serviceCards.length > 0 && (
+              <RevealGroup className="grid md:grid-cols-3 gap-6">
+                {serviceCards.map((service) => (
+                  <RevealItem key={service.id} className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 hover:border-purple-400/40 transition-colors">
+                    <h3 className="font-display text-xl font-semibold mb-4">{service.title}</h3>
+                    <p className="text-gray-400">{service.description}</p>
+                    {service.cta_url && service.cta_label && (
+                      <a href={service.cta_url} className="inline-block mt-6 text-purple-300 hover:text-white">{service.cta_label}</a>
+                    )}
+                  </RevealItem>
+                ))}
+              </RevealGroup>
+            )}
+          </div>
+        </section>
+
+        <Experience />
+        <Projects state={projectState} onOpen={openProjectModal} />
+
+        {/* Contact */}
+        <section id="contact" className="py-28 px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-6xl mx-auto">
+            <SectionHeading
+              eyebrow={t.contact.eyebrow}
+              title={
+                <>
+                  {t.contact.titleStart} <span className="gradient-text">{t.contact.titleHighlight}</span>
+                </>
+              }
+              description={t.contact.description}
+            />
+
+            <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-6">
+              <Reveal className="relative overflow-hidden rounded-3xl border border-white/10 min-h-[22rem]">
                 <img
-                  src="/carlo-musongela.png" // Remplace par le chemin réel de ta photo
-                  alt="Photo de profil"
-                  className="w-full h-full object-cover rounded-full relative z-10"
+                  src={photos.work.src}
+                  srcSet={photos.work.srcSet}
+                  sizes="(min-width: 1024px) 40vw, 90vw"
+                  alt={t.contact.photoAlt}
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
-              </div>
-            </div>
-
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              Hey, I'm{" "}
-              <span className="text-transparent bg-gradient-to-r from-purple-400 to-teal-400 bg-clip-text">
-                Carlo
-              </span>{" "}
-              ✨
-            </h1>
-            <h2 className="text-2xl md:text-3xl text-gray-300 mb-6">
-              A{" "}
-              <span className="text-transparent bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text">
-                Fullstack Developer
-              </span>
-            </h2>
-            <p className="text-lg text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed">
-              A fullstack developer with solid foundations in design, passionate
-              about crafting seamless user experiences. I thrive at the
-              intersection of creativity and functionality, specializing in web
-              and mobile applications.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <button
-                onClick={() => scrollToSection("contact")}
-                className="bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
-              >
-                <Mail className="inline-block w-5 h-5 mr-2" />
-                Contact Me
-              </button>
-              <button
-                onClick={() => scrollToSection("projects")}
-                className="border border-gray-600 hover:border-purple-500/50 text-gray-300 hover:text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 backdrop-blur-sm bg-gray-800/30 hover:bg-gray-800/50"
-              >
-                <ExternalLink className="inline-block w-5 h-5 mr-2" />
-                View Projects
-              </button>
-            </div>
-
-            <div className="flex justify-center space-x-6">
-              <a
-                href="https://github.com/Mcleroi01"
-                className="text-gray-400 hover:text-purple-400 transition-colors duration-200 transform hover:scale-110"
-              >
-                <Github className="w-6 h-6" />
-              </a>
-              <a
-                href="https://linkedin.com/in/carlo-musongela-bb024b202"
-                className="text-gray-400 hover:text-blue-400 transition-colors duration-200 transform hover:scale-110"
-              >
-                <Linkedin className="w-6 h-6" />
-              </a>
-              <div className="flex items-center text-gray-400">
-                <MapPin className="w-4 h-4 mr-1" />
-                <span className="text-sm">Kinshasa, DR CONGO</span>
-              </div>
-              <div className="flex items-center text-gray-400">
-                <Languages className="w-4 h-4 mr-1" />
-                <span className="text-sm">EN/FR/PT</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <ClientLogos />
-
-      {/* Services Section */}
-      <section
-        id="services"
-        className="py-20 px-4 sm:px-6 lg:px-8 relative z-10"
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Building Digital Experiences
-            </h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              I specialize in creating stunning user interfaces and developing
-              high-quality applications that stand out.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* What I Can Do */}
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-8 border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300 hover:transform hover:scale-105 shadow-xl hover:shadow-purple-500/10">
-              <div className="flex items-center mb-6">
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center mr-4 shadow-lg shadow-purple-500/25">
-                  <Code2 className="w-6 h-6 text-white" />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/60 to-gray-950/10" />
+                <div className="relative flex h-full flex-col justify-end p-8 gap-4">
+                  <p className="font-display text-2xl font-semibold">{t.contact.tagline}</p>
+                  <a href="tel:+243803122782" className="flex items-center gap-3 text-gray-200 hover:text-white">
+                    <Phone className="h-5 w-5 text-teal-300" /> +243 803 122 782
+                  </a>
+                  <a href="mailto:Carlomusongela1@gmail.com" className="flex items-center gap-3 text-gray-200 hover:text-white break-all">
+                    <Mail className="h-5 w-5 text-teal-300" /> Carlomusongela1@gmail.com
+                  </a>
+                  <div className="flex gap-4 pt-2">
+                    <a href="https://github.com/Mcleroi01" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="rounded-full border border-white/15 p-2.5 hover:bg-white/10">
+                      <Github className="h-5 w-5" />
+                    </a>
+                    <a href="https://linkedin.com/in/carlo-musongela-bb024b202" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="rounded-full border border-white/15 p-2.5 hover:bg-white/10">
+                      <Linkedin className="h-5 w-5" />
+                    </a>
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold">What I Can Do</h3>
-              </div>
-              <p className="text-gray-400 mb-6">
-                I can help develop solutions that will help you grow your
-                business and reach your goals.
-              </p>
-              <ul className="space-y-3 text-gray-300">
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full mr-3 shadow-sm shadow-purple-400/50"></div>
-                  Web App Development
-                </li>
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full mr-3 shadow-sm shadow-blue-400/50"></div>
-                  Mobile App Development
-                </li>
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-teal-400 rounded-full mr-3 shadow-sm shadow-teal-400/50"></div>
-                  API Development & Integration
-                </li>
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-green-400 rounded-full mr-3 shadow-sm shadow-green-400/50"></div>
-                  Custom Systems & Solutions
-                </li>
-              </ul>
-            </div>
+              </Reveal>
 
-            {/* Tools I Use */}
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-8 border border-gray-700/50 hover:border-teal-500/50 transition-all duration-300 hover:transform hover:scale-105 shadow-xl hover:shadow-teal-500/10">
-              <div className="flex items-center mb-6">
-                <div className="w-12 h-12 bg-gradient-to-r from-teal-600 to-green-600 rounded-lg flex items-center justify-center mr-4 shadow-lg shadow-teal-500/25">
-                  <Database className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold">Tools I Use</h3>
-              </div>
-              <p className="text-gray-400 mb-6">
-                I use the latest tools and technologies to build functional and
-                scalable products.
-              </p>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold text-purple-400 mb-2">
-                    Frontend:
-                  </h4>
-                  <p className="text-sm text-gray-300">
-                    React.js, Flutter, HTML5, CSS3, JavaScript
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-blue-400 mb-2">Backend:</h4>
-                  <p className="text-sm text-gray-300">
-                    Laravel, PHP, Dart, Firebase, Node.js
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-teal-400 mb-2">
-                    Database:
-                  </h4>
-                  <p className="text-sm text-gray-300">
-                    MySQL, PostgreSQL, Firestore
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-green-400 mb-2">Tools:</h4>
-                  <p className="text-sm text-gray-300">
-                    Git, Docker, VS Code, Figma
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Specializations */}
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-8 border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300 hover:transform hover:scale-105 shadow-xl hover:shadow-blue-500/10">
-              <div className="flex items-center mb-6">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-4 shadow-lg shadow-blue-500/25">
-                  <Smartphone className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-xl font-semibold">Specializations</h3>
-              </div>
-              <p className="text-gray-400 mb-6">
-                I am a developer first, designer second. I help design clean and
-                modern interfaces.
-              </p>
-              <ul className="space-y-3 text-gray-300">
-                <li className="flex items-center">
-                  <Globe className="w-4 h-4 mr-3 text-blue-400" />
-                  Marketplace Development
-                </li>
-                <li className="flex items-center">
-                  <Smartphone className="w-4 h-4 mr-3 text-purple-400" />
-                  Booking Systems
-                </li>
-                <li className="flex items-center">
-                  <Database className="w-4 h-4 mr-3 text-teal-400" />
-                  Internal Business Tools
-                </li>
-                <li className="flex items-center">
-                  <Code2 className="w-4 h-4 mr-3 text-green-400" />
-                  Cross-Platform Solutions
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Projects Section */}
-      <section
-        id="projects"
-        className="py-20 px-4 sm:px-6 lg:px-8 relative z-10"
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              My Projects{" "}
-              <span className="text-transparent bg-gradient-to-r from-purple-400 to-teal-400 bg-clip-text">
-                Completed
-              </span>
-            </h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              A showcase of successful projects delivered to satisfied clients
-              across various industries.
-            </p>
-          </div>
-
-          {/* Projects Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projectsData.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onViewDetails={openProjectModal}
-              />
-            ))}
-          </div>
-
-          {/* Projects Summary */}
-          <div className="grid md:grid-cols-4 gap-6 mt-12">
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 text-center">
-              <div className="text-3xl font-bold text-transparent bg-gradient-to-r from-purple-400 to-teal-400 bg-clip-text mb-2">
-                {projectsData.length}
-              </div>
-              <div className="text-gray-400 text-sm">Total Projects</div>
-            </div>
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 text-center">
-              <div className="text-3xl font-bold text-green-400 mb-2">
-                {projectsData.filter((p) => p.status === "Completed").length}
-              </div>
-              <div className="text-gray-400 text-sm">Completed</div>
-            </div>
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 text-center">
-              <div className="text-3xl font-bold text-blue-400 mb-2">
-                {projectsData.filter((p) => p.status === "In Progress").length}
-              </div>
-              <div className="text-gray-400 text-sm">In Progress</div>
-            </div>
-            <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 text-center">
-              <div className="text-3xl font-bold text-yellow-400 mb-2">
-                {projectsData.filter((p) => p.status === "Planned").length}
-              </div>
-              <div className="text-gray-400 text-sm">Planned</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Contact Section */}
-      <section
-        id="contact"
-        className="py-20 px-4 sm:px-6 lg:px-8 relative z-10"
-      >
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              <span className="text-transparent bg-gradient-to-r from-purple-400 to-teal-400 bg-clip-text">
-                Bringing your ideas to life.
-              </span>
-            </h2>
-            <h3 className="text-2xl md:text-3xl font-bold mb-4 text-gray-300">
-              Let's turn your vision into reality
-            </h3>
-            <p className="text-lg text-gray-400">
-              Have a project in mind or just want to chat? Let's connect!
-            </p>
-          </div>
-
-          <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-8 border border-gray-700/50 shadow-2xl">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-gray-300 mb-2"
+              <Reveal delay={0.1} className="rounded-3xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-sm">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div className="grid md:grid-cols-2 gap-5">
+                    <div className="relative">
+                      <input id="name" name="name" type="text" value={formData.name} onChange={handleInputChange} required placeholder={t.contact.namePlaceholder} className={inputClass} />
+                      <label htmlFor="name" className={labelClass}>{t.contact.name}</label>
+                    </div>
+                    <div className="relative">
+                      <input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required placeholder="you@example.com" className={inputClass} />
+                      <label htmlFor="email" className={labelClass}>{t.contact.email}</label>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <textarea id="message" name="message" value={formData.message} onChange={handleInputChange} required rows={7} placeholder={t.contact.message} className={`${inputClass} resize-none`} />
+                    <label htmlFor="message" className={labelClass}>{t.contact.message}</label>
+                  </div>
+                  {sendError && <p role="alert" className="text-sm text-red-300">{sendError}</p>}
+                  <button
+                    type="submit"
+                    disabled={isSending}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-teal-600 px-8 py-4 font-semibold shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-shadow disabled:opacity-60"
                   >
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400 backdrop-blur-sm transition-all duration-200"
-                    placeholder="Your Name"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                  >
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400 backdrop-blur-sm transition-all duration-200"
-                    placeholder="your.email@example.com"
-                  />
-                </div>
-              </div>
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Message
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  required
-                  rows={6}
-                  className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400 resize-none backdrop-blur-sm transition-all duration-200"
-                  placeholder="Tell me about your project..."
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white px-8 py-4 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 flex items-center justify-center shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
-              >
-                <Send className="w-5 h-5 mr-2" />
-                Send Message
-              </button>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900/50 backdrop-blur-sm border-t border-gray-800/50 py-8 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <div className="flex items-center space-x-2 mb-2">
-                <Code2 className="h-6 w-6 text-purple-400" />
-                <span className="text-lg font-bold text-transparent bg-gradient-to-r from-purple-400 to-teal-400 bg-clip-text">
-                  I'mcleroi01
-                </span>
-              </div>
-              <p className="text-sm text-gray-400">
-                Carlo Musongela - Based in Kinshasa, DR CONGO
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                © 2024 I'mcleroi01. All rights reserved.
-              </p>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <p className="text-sm text-gray-400 mr-4">
-                Built with React, TypeScript and Tailwind CSS
-              </p>
-              <a
-                href="https://github.com/Mcleroi01"
-                className="text-gray-400 hover:text-purple-400 transition-colors duration-200 transform hover:scale-110"
-              >
-                <Github className="w-5 h-5" />
-              </a>
-              <a
-                href="https://linkedin.com/in/carlo-musongela-bb024b202"
-                className="text-gray-400 hover:text-blue-400 transition-colors duration-200 transform hover:scale-110"
-              >
-                <Linkedin className="w-5 h-5" />
-              </a>
+                    {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                    {isSending ? t.contact.sending : t.contact.send}
+                  </button>
+                </form>
+              </Reveal>
             </div>
           </div>
+        </section>
+      </main>
+
+      <footer className="relative z-10 border-t border-white/5 py-10 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 pb-16 md:pb-0 md:pr-20">
+          <div className="text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+              <Code2 className="h-6 w-6 text-purple-400" />
+              <span className="font-display text-lg font-bold gradient-text">I'mcleroi01</span>
+            </div>
+            <p className="text-sm text-gray-400">Carlo Musongela · {t.footer.basedIn} {profile.location ?? staticProfile.location}</p>
+            <p className="text-xs text-gray-500 mt-1">© {new Date().getFullYear()} I'mcleroi01. {t.footer.rights}</p>
+          </div>
+          <p className="text-sm text-gray-500">{t.footer.builtWith}</p>
+          <Magnetic>
+            <button
+              onClick={() => scrollToId("home")}
+              aria-label={t.nav.backToTop}
+              className="rounded-full border border-white/15 p-3 text-gray-300 hover:text-white hover:bg-white/10"
+            >
+              <ArrowUp className="h-5 w-5" />
+            </button>
+          </Magnetic>
         </div>
       </footer>
 
-      {/* Modals */}
-      <ProjectModal
-        isOpen={isProjectModalOpen}
-        onClose={() => setIsProjectModalOpen(false)}
-        project={selectedProject}
-      />
-
+      <ProjectModal isOpen={isProjectModalOpen} onClose={() => setIsProjectModalOpen(false)} project={selectedProject} />
       <SuccessModal
         isOpen={isSuccessModalOpen}
         onClose={() => setIsSuccessModalOpen(false)}
-        title="Message Sent Successfully!"
-        message="Thank you for your message! I'll get back to you soon."
+        title={t.contact.successTitle}
+        message={t.contact.successMessage}
+        closeLabel={t.projects.modal.close}
       />
-
-      {/* WhatsApp Floating Button */}
-      <WhatsAppButton
-        phoneNumber="+243803122782"
-        message="Bonjour Carlo! Je suis intéressé par vos services de développement."
-      />
+      <WhatsAppButton phoneNumber="+243803122782" />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<PublicPortfolio />} />
+        <Route
+          path="/admin"
+          element={
+            <Suspense fallback={<div className="min-h-screen bg-gray-950" />}>
+              <AdminPage />
+            </Suspense>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

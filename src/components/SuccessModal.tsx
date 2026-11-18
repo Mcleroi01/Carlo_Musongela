@@ -7,6 +7,7 @@ interface SuccessModalProps {
   onClose: () => void;
   title: string;
   message: string;
+  closeLabel?: string;
 }
 
 export const SuccessModal: React.FC<SuccessModalProps> = ({
@@ -14,6 +15,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
   onClose,
   title,
   message,
+  closeLabel = "Close",
 }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title}>
@@ -26,7 +28,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({
           onClick={onClose}
           className="bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white px-6 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105"
         >
-          Close
+          {closeLabel}
         </button>
       </div>
     </Modal>

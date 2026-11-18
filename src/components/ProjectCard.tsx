@@ -1,135 +1,139 @@
-import React from "react";
-import { Eye, ExternalLink, Github, Calendar, User } from "lucide-react";
-import { Project } from "../data/projects";
+import { useRef, type PointerEvent } from "react";
+import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
+import { ArrowUpRight, Calendar, Eye, Github, User } from "lucide-react";
+import type { Project } from "../types/portfolio";
+import { useI18n } from "../i18n/context";
+import { format } from "../i18n/translations";
 
 interface ProjectCardProps {
   project: Project;
   onViewDetails: (project: Project) => void;
 }
 
-export function ProjectCard({ project, onViewDetails }: ProjectCardProps) {
-  const defaultPreviewImage =
-    "https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=800";
-  const previewImage = project.image || defaultPreviewImage;
+const defaultPreviewImage =
+  "https://images.pexels.com/photos/3861969/pexels-photo-3861969.jpeg?auto=compress&cs=tinysrgb&w=800";
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return "bg-green-500/20 border-green-500/30 text-green-300";
-      case "In Progress":
-        return "bg-blue-500/20 border-blue-500/30 text-blue-300";
-      case "Planned":
-        return "bg-yellow-500/20 border-yellow-500/30 text-yellow-300";
-      default:
-        return "bg-gray-500/20 border-gray-500/30 text-gray-300";
-    }
+const statusColor: Record<string, string> = {
+  Completed: "bg-emerald-500/15 border-emerald-400/30 text-emerald-300",
+  "In Progress": "bg-blue-500/15 border-blue-400/30 text-blue-300",
+  Planned: "bg-amber-500/15 border-amber-400/30 text-amber-300",
+};
+
+export function ProjectCard({ project, onViewDetails }: ProjectCardProps) {
+  const { t } = useI18n();
+  const ref = useRef<HTMLDivElement>(null);
+  const rx = useSpring(useMotionValue(0), { stiffness: 200, damping: 20 });
+  const ry = useSpring(useMotionValue(0), { stiffness: 200, damping: 20 });
+  const mx = useMotionValue(50);
+  const my = useMotionValue(50);
+  const spotlight = useMotionTemplate`radial-gradient(420px circle at ${mx}% ${my}%, rgba(168,85,247,0.18), transparent 60%)`;
+
+  const onMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== "mouse" || !ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    ry.set((px - 0.5) * 10);
+    rx.set(-(py - 0.5) * 10);
+    mx.set(px * 100);
+    my.set(py * 100);
+  };
+  const onLeave = () => {
+    rx.set(0);
+    ry.set(0);
   };
 
   return (
-    <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700/50 overflow-hidden hover:border-purple-500/50 transition-all duration-300 hover:transform hover:scale-105 shadow-xl hover:shadow-purple-500/10 flex flex-col h-full">
-      {/* Project Preview Image */}
-      <div className="relative h-48 bg-gray-700/30 overflow-hidden group">
-        <img
-          src={previewImage}
-          alt={project.title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
+    <motion.div
+      ref={ref}
+      onPointerMove={onMove}
+      onPointerLeave={onLeave}
+      style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }}
+      className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-gray-900/60 backdrop-blur-sm hover:border-purple-400/40 transition-colors"
+    >
+      <motion.div aria-hidden className="pointer-events-none absolute inset-0 z-10 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: spotlight }} />
 
-        {/* Status Badge */}
-        <div className="absolute top-4 right-4">
-          <span
-            className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-              project.status,
-            )}`}
-          >
-            {project.status}
+      <div className="relative h-52 overflow-hidden bg-gray-800/60">
+        <img
+          src={project.image || defaultPreviewImage}
+          alt={project.title}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/20 to-transparent" />
+
+        <span
+          className={`absolute top-4 right-4 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur ${
+            statusColor[project.status] ?? "bg-gray-500/20 border-gray-500/30 text-gray-300"
+          }`}
+        >
+          {t.projects.status[project.status] ?? project.status}
+        </span>
+        <span className="absolute top-4 left-4 rounded-full bg-gray-950/70 px-3 py-1 text-xs font-medium text-purple-200 backdrop-blur">
+          {t.projects.category[project.category] ?? project.category}
+        </span>
+      </div>
+
+      <div className="relative z-20 flex flex-grow flex-col p-6">
+        <h3 className="font-display text-xl font-semibold text-white mb-2">{project.title}</h3>
+        <p className="text-sm text-gray-400 line-clamp-2 mb-5">{project.description}</p>
+
+        <div className="flex flex-wrap gap-x-5 gap-y-2 mb-5 text-sm text-gray-300">
+          <span className="flex items-center">
+            <User className="mr-2 h-4 w-4 text-blue-400" />
+            {project.client}
+          </span>
+          <span className="flex items-center">
+            <Calendar className="mr-2 h-4 w-4 text-emerald-400" />
+            {project.completedDate}
           </span>
         </div>
 
-        {/* Live Link Badge */}
-        {project.liveUrl && (
-          <div className="absolute top-4 left-4">
+        <div className="flex flex-wrap gap-2 mb-6">
+          {project.technologies.slice(0, 3).map((tech) => (
+            <span key={tech} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-gray-300">
+              {tech}
+            </span>
+          ))}
+          {project.technologies.length > 3 && (
+            <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-gray-400">
+              +{project.technologies.length - 3}
+            </span>
+          )}
+        </div>
+
+        <div className="mt-auto flex gap-2">
+          <button
+            onClick={() => onViewDetails(project)}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-purple-400/30 bg-purple-500/10 px-3 py-2.5 text-sm font-medium text-purple-200 hover:bg-purple-500/20 hover:text-white transition-colors"
+          >
+            <Eye className="h-4 w-4" />
+            {t.projects.details}
+          </button>
+          {project.liveUrl && (
             <a
               href={project.liveUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-3 py-1 bg-purple-600/80 hover:bg-purple-600 text-white rounded-full text-xs font-medium transition-all duration-200 backdrop-blur-sm"
+              aria-label={format(t.projects.openLive, { title: project.title })}
+              className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
             >
-              <ExternalLink className="w-3 h-3 mr-1" />
-              Live
+              <ArrowUpRight className="h-4 w-4" />
             </a>
-          </div>
-        )}
-      </div>
-
-      {/* Project Content */}
-      <div className="p-6 flex flex-col flex-grow">
-        {/* Title and Category */}
-        <div className="mb-4">
-          <h3 className="text-xl font-semibold text-white mb-1">
-            {project.title}
-          </h3>
-          <p className="text-xs font-medium text-purple-400 mb-2">
-            {project.category}
-          </p>
-          <p className="text-sm text-gray-400 line-clamp-2">
-            {project.description}
-          </p>
-        </div>
-
-        {/* Project Info */}
-        <div className="space-y-2 mb-4 text-sm text-gray-300">
-          <div className="flex items-center">
-            <User className="w-4 h-4 mr-2 text-blue-400" />
-            <span>{project.client}</span>
-          </div>
-          <div className="flex items-center">
-            <Calendar className="w-4 h-4 mr-2 text-green-400" />
-            <span>{project.completedDate}</span>
-          </div>
-        </div>
-
-        {/* Technologies */}
-        <div className="mb-4">
-          <div className="flex flex-wrap gap-2">
-            {project.technologies.slice(0, 3).map((tech, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 bg-gray-700/50 text-xs text-gray-300 rounded border border-gray-600/30"
-              >
-                {tech}
-              </span>
-            ))}
-            {project.technologies.length > 3 && (
-              <span className="px-2 py-1 bg-gray-700/50 text-xs text-gray-400 rounded border border-gray-600/30">
-                +{project.technologies.length - 3}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-2 mt-auto">
-          <button
-            onClick={() => onViewDetails(project)}
-            className="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gradient-to-r from-purple-600/20 to-teal-600/20 hover:from-purple-600/30 hover:to-teal-600/30 text-purple-300 hover:text-white rounded-lg text-sm font-medium transition-all duration-200 border border-purple-500/30 hover:border-purple-500/50"
-          >
-            <Eye className="w-4 h-4 mr-1" />
-            Details
-          </button>
+          )}
           {project.githubUrl && (
             <a
               href={project.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center px-3 py-2 bg-gray-700/30 hover:bg-gray-700/50 text-gray-300 hover:text-white rounded-lg text-sm font-medium transition-all duration-200 border border-gray-600/30 hover:border-gray-500/50"
+              aria-label={format(t.projects.sourceCode, { title: project.title })}
+              className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
             >
-              <Github className="w-4 h-4" />
+              <Github className="h-4 w-4" />
             </a>
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

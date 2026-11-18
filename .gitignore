@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Raw full-size photos (46 MB); web versions live in public/images
+photos-originals/
