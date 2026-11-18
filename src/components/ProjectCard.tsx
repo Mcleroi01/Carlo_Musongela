@@ -2,6 +2,8 @@ import { useRef, type PointerEvent } from "react";
 import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
 import { ArrowUpRight, Calendar, Eye, Github, User } from "lucide-react";
 import type { Project } from "../types/portfolio";
+import { useI18n } from "../i18n/context";
+import { format } from "../i18n/translations";
 
 interface ProjectCardProps {
   project: Project;
@@ -18,6 +20,7 @@ const statusColor: Record<string, string> = {
 };
 
 export function ProjectCard({ project, onViewDetails }: ProjectCardProps) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDivElement>(null);
   const rx = useSpring(useMotionValue(0), { stiffness: 200, damping: 20 });
   const ry = useSpring(useMotionValue(0), { stiffness: 200, damping: 20 });
@@ -64,10 +67,10 @@ export function ProjectCard({ project, onViewDetails }: ProjectCardProps) {
             statusColor[project.status] ?? "bg-gray-500/20 border-gray-500/30 text-gray-300"
           }`}
         >
-          {project.status}
+          {t.projects.status[project.status] ?? project.status}
         </span>
         <span className="absolute top-4 left-4 rounded-full bg-gray-950/70 px-3 py-1 text-xs font-medium text-purple-200 backdrop-blur">
-          {project.category}
+          {t.projects.category[project.category] ?? project.category}
         </span>
       </div>
 
@@ -105,14 +108,14 @@ export function ProjectCard({ project, onViewDetails }: ProjectCardProps) {
             className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-purple-400/30 bg-purple-500/10 px-3 py-2.5 text-sm font-medium text-purple-200 hover:bg-purple-500/20 hover:text-white transition-colors"
           >
             <Eye className="h-4 w-4" />
-            Details
+            {t.projects.details}
           </button>
           {project.liveUrl && (
             <a
               href={project.liveUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`Open ${project.title} live`}
+              aria-label={format(t.projects.openLive, { title: project.title })}
               className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
             >
               <ArrowUpRight className="h-4 w-4" />
@@ -123,7 +126,7 @@ export function ProjectCard({ project, onViewDetails }: ProjectCardProps) {
               href={project.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`${project.title} source on GitHub`}
+              aria-label={format(t.projects.sourceCode, { title: project.title })}
               className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
             >
               <Github className="h-4 w-4" />

@@ -4,6 +4,8 @@ import { ProjectCard } from "../components/ProjectCard";
 import { Counter } from "../components/motion/Counter";
 import { SectionHeading } from "./SectionHeading";
 import type { ContentState, Project } from "../types/portfolio";
+import { useI18n } from "../i18n/context";
+import { localizeProject } from "../data/projects.fr";
 
 interface ProjectsProps {
   state: ContentState<Project[]>;
@@ -11,44 +13,46 @@ interface ProjectsProps {
 }
 
 export function Projects({ state, onOpen }: ProjectsProps) {
-  const projects = state.data;
-  const [filter, setFilter] = useState<string>("All");
+  const { t, lang } = useI18n();
+  const projects = useMemo(() => state.data.map((p) => localizeProject(p, lang)), [state.data, lang]);
+  const [filter, setFilter] = useState<string>("all");
 
   const categories = useMemo(
-    () => ["All", ...Array.from(new Set(projects.map((p) => p.category)))],
+    () => ["all", ...Array.from(new Set(projects.map((p) => p.category)))],
     [projects],
   );
-  const visible = filter === "All" ? projects : projects.filter((p) => p.category === filter);
+  const visible = filter === "all" ? projects : projects.filter((p) => p.category === filter);
+  const categoryLabel = (c: string) => (c === "all" ? t.projects.all : t.projects.category[c] ?? c);
 
   const summary = [
-    { label: "Total projects", value: projects.length, color: "gradient-text" },
-    { label: "Completed", value: projects.filter((p) => p.status === "Completed").length, color: "text-emerald-400" },
-    { label: "In progress", value: projects.filter((p) => p.status === "In Progress").length, color: "text-blue-400" },
-    { label: "Planned", value: projects.filter((p) => p.status === "Planned").length, color: "text-amber-400" },
+    { label: t.projects.summary.total, value: projects.length, color: "gradient-text" },
+    { label: t.projects.summary.completed, value: projects.filter((p) => p.status === "Completed").length, color: "text-emerald-400" },
+    { label: t.projects.summary.inProgress, value: projects.filter((p) => p.status === "In Progress").length, color: "text-blue-400" },
+    { label: t.projects.summary.planned, value: projects.filter((p) => p.status === "Planned").length, color: "text-amber-400" },
   ];
 
   return (
     <section id="projects" className="relative z-10 py-28 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <SectionHeading
-          eyebrow="Selected work"
+          eyebrow={t.projects.eyebrow}
           title={
             <>
-              Projects <span className="gradient-text">delivered</span>
+              {t.projects.titleStart} <span className="gradient-text">{t.projects.titleHighlight}</span>
             </>
           }
-          description="A showcase of products built for clients across health, e-commerce, education and events."
+          description={t.projects.description}
         />
 
-        {state.isLoading && <p role="status" className="mb-6 text-center text-sm text-gray-400">Chargement des projets…</p>}
-        {state.error && <p role="status" className="mb-6 text-center text-sm text-amber-300">Projets Supabase indisponibles ; les projets statiques sont affichés.</p>}
+        {state.isLoading && <p role="status" className="mb-6 text-center text-sm text-gray-400">{t.projects.loading}</p>}
+        {state.error && <p role="status" className="mb-6 text-center text-sm text-amber-300">{t.projects.error}</p>}
         {state.source === "supabase" && projects.length === 0 && !state.isLoading && (
-          <p className="mb-6 text-center text-gray-400">Aucun projet publié pour le moment.</p>
+          <p className="mb-6 text-center text-gray-400">{t.projects.empty}</p>
         )}
 
         {categories.length > 2 && (
           <LayoutGroup>
-            <div role="tablist" aria-label="Filter projects" className="mb-10 flex flex-wrap justify-center gap-2">
+            <div role="tablist" aria-label={t.projects.filterAria} className="mb-10 flex flex-wrap justify-center gap-2">
               {categories.map((c) => (
                 <button
                   key={c}
@@ -66,7 +70,7 @@ export function Projects({ state, onOpen }: ProjectsProps) {
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
-                  <span className="relative">{c}</span>
+                  <span className="relative">{categoryLabel(c)}</span>
                 </button>
               ))}
             </div>

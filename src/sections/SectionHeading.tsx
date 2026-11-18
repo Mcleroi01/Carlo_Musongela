@@ -1,5 +1,6 @@
 import { useRef, type ReactNode } from "react";
 import { gsap, SplitText, useGSAP, prefersReducedMotion, keepGradientOnSplit } from "../lib/gsap";
+import { useI18n } from "../i18n/context";
 
 interface SectionHeadingProps {
   eyebrow: string;
@@ -8,8 +9,17 @@ interface SectionHeadingProps {
   align?: "center" | "left";
 }
 
-/** Section title whose words rise into place as it enters the viewport. */
-export function SectionHeading({ eyebrow, title, description, align = "center" }: SectionHeadingProps) {
+/**
+ * Section title whose words rise into place as it enters the viewport.
+ * SplitText rewrites the heading's DOM, so the heading remounts when the language
+ * changes instead of letting React patch text nodes that no longer exist.
+ */
+export function SectionHeading(props: SectionHeadingProps) {
+  const { lang } = useI18n();
+  return <AnimatedHeading key={lang} {...props} />;
+}
+
+function AnimatedHeading({ eyebrow, title, description, align = "center" }: SectionHeadingProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useGSAP(

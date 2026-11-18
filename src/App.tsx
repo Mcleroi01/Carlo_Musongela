@@ -32,6 +32,7 @@ import { SectionHeading } from "./sections/SectionHeading";
 import { projectsData } from "./data/projects";
 import { staticProfile } from "./data/profile";
 import { photos } from "./data/resume";
+import { useI18n } from "./i18n/context";
 import { usePortfolioData } from "./hooks/usePortfolioData";
 import {
   getPublicProfile,
@@ -44,33 +45,10 @@ const AdminPage = lazy(() => import("./pages/AdminPage").then((m) => ({ default:
 
 const emptyServiceFallback: ServiceCardData[] = [];
 
-const staticServices = [
-  {
-    icon: Code2,
-    accent: "from-purple-600 to-blue-600",
-    title: "What I can do",
-    text: "Solutions that help you grow your business and reach your goals.",
-    items: ["Web app development", "Mobile app development", "API development & integration", "Custom systems & solutions"],
-  },
-  {
-    icon: Database,
-    accent: "from-teal-600 to-emerald-600",
-    title: "Tools I use",
-    text: "Modern, proven technologies to build functional and scalable products.",
-    items: [
-      "Frontend: React, Tailwind, Flutter",
-      "Backend: Laravel, PHP, Node.js, Python",
-      "Data: MySQL, PostgreSQL, Firebase",
-      "Ops & design: Git, AWS, Figma",
-    ],
-  },
-  {
-    icon: Smartphone,
-    accent: "from-blue-600 to-purple-600",
-    title: "Specializations",
-    text: "Developer first, designer second: clean and modern interfaces.",
-    items: ["Marketplace development", "Booking systems", "Internal business tools", "Cross-platform solutions"],
-  },
+const serviceStyles = [
+  { icon: Code2, accent: "from-purple-600 to-blue-600" },
+  { icon: Database, accent: "from-teal-600 to-emerald-600" },
+  { icon: Smartphone, accent: "from-blue-600 to-purple-600" },
 ];
 
 const inputClass =
@@ -79,6 +57,7 @@ const labelClass =
   "pointer-events-none absolute left-4 top-2 text-xs text-gray-400 transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-focus:top-2 peer-focus:text-xs peer-focus:text-purple-300";
 
 function PublicPortfolio() {
+  const { t } = useI18n();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
@@ -109,10 +88,10 @@ function PublicPortfolio() {
         setIsSuccessModalOpen(true);
         setFormData({ name: "", email: "", message: "" });
       } else {
-        setSendError("The message could not be sent. Please try again or reach me on WhatsApp.");
+        setSendError(t.contact.sendError);
       }
     } catch {
-      setSendError("Network error. Please check your connection and try again.");
+      setSendError(t.contact.networkError);
     } finally {
       setIsSending(false);
     }
@@ -152,7 +131,7 @@ function PublicPortfolio() {
         <Hero profile={profile} fallback={staticProfile} />
         {profileState.error && (
           <p role="status" className="relative z-10 -mt-10 mb-6 text-center text-sm text-amber-300">
-            Profil Supabase indisponible ; le profil statique est affiché.
+            {t.hero.profileError}
           </p>
         )}
 
@@ -167,23 +146,25 @@ function PublicPortfolio() {
         <section id="services" className="py-28 px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-7xl mx-auto">
             <SectionHeading
-              eyebrow="Services"
+              eyebrow={t.services.eyebrow}
               title={
                 <>
-                  Building <span className="gradient-text">digital experiences</span>
+                  {t.services.titleStart} <span className="gradient-text">{t.services.titleHighlight}</span>
                 </>
               }
-              description="I create clean user interfaces and develop high-quality applications that stand out."
+              description={t.services.description}
             />
 
-            {serviceState.error && <p role="status" className="mb-6 text-center text-sm text-amber-300">Les services Supabase sont indisponibles ; le contenu statique est affiché.</p>}
-            {serviceState.isLoading && <p role="status" className="mb-6 text-center text-sm text-gray-400">Chargement des services…</p>}
+            {serviceState.error && <p role="status" className="mb-6 text-center text-sm text-amber-300">{t.services.error}</p>}
+            {serviceState.isLoading && <p role="status" className="mb-6 text-center text-sm text-gray-400">{t.services.loading}</p>}
 
             {serviceState.source === "static" && (
               <RevealGroup className="grid md:grid-cols-3 gap-6" stagger={0.12}>
-                {staticServices.map(({ icon: Icon, accent, title, text, items }) => (
+                {t.services.cards.map(({ title, text, items }, i) => {
+                  const { icon: Icon, accent } = serviceStyles[i % serviceStyles.length];
+                  return (
                   <RevealItem
-                    key={title}
+                    key={i}
                     className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8 hover:border-purple-400/40 transition-colors"
                   >
                     <div className={`absolute -top-24 -right-24 h-48 w-48 rounded-full bg-gradient-to-br ${accent} opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-30`} />
@@ -201,11 +182,12 @@ function PublicPortfolio() {
                       ))}
                     </ul>
                   </RevealItem>
-                ))}
+                  );
+                })}
               </RevealGroup>
             )}
             {serviceState.source === "supabase" && serviceCards.length === 0 && (
-              <p className="text-center text-gray-400">Aucun service publié pour le moment.</p>
+              <p className="text-center text-gray-400">{t.services.empty}</p>
             )}
             {serviceState.source === "supabase" && serviceCards.length > 0 && (
               <RevealGroup className="grid md:grid-cols-3 gap-6">
@@ -230,13 +212,13 @@ function PublicPortfolio() {
         <section id="contact" className="py-28 px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-6xl mx-auto">
             <SectionHeading
-              eyebrow="Contact"
+              eyebrow={t.contact.eyebrow}
               title={
                 <>
-                  Let's turn your vision <span className="gradient-text">into reality</span>
+                  {t.contact.titleStart} <span className="gradient-text">{t.contact.titleHighlight}</span>
                 </>
               }
-              description="Have a project in mind or just want to chat? Let's connect."
+              description={t.contact.description}
             />
 
             <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-6">
@@ -245,13 +227,13 @@ function PublicPortfolio() {
                   src={photos.work.src}
                   srcSet={photos.work.srcSet}
                   sizes="(min-width: 1024px) 40vw, 90vw"
-                  alt="Carlo Musongela working"
+                  alt={t.contact.photoAlt}
                   loading="lazy"
                   className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/60 to-gray-950/10" />
                 <div className="relative flex h-full flex-col justify-end p-8 gap-4">
-                  <p className="font-display text-2xl font-semibold">Bringing your ideas to life.</p>
+                  <p className="font-display text-2xl font-semibold">{t.contact.tagline}</p>
                   <a href="tel:+243803122782" className="flex items-center gap-3 text-gray-200 hover:text-white">
                     <Phone className="h-5 w-5 text-teal-300" /> +243 803 122 782
                   </a>
@@ -273,17 +255,17 @@ function PublicPortfolio() {
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="grid md:grid-cols-2 gap-5">
                     <div className="relative">
-                      <input id="name" name="name" type="text" value={formData.name} onChange={handleInputChange} required placeholder="Your name" className={inputClass} />
-                      <label htmlFor="name" className={labelClass}>Name</label>
+                      <input id="name" name="name" type="text" value={formData.name} onChange={handleInputChange} required placeholder={t.contact.namePlaceholder} className={inputClass} />
+                      <label htmlFor="name" className={labelClass}>{t.contact.name}</label>
                     </div>
                     <div className="relative">
                       <input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} required placeholder="you@example.com" className={inputClass} />
-                      <label htmlFor="email" className={labelClass}>Email</label>
+                      <label htmlFor="email" className={labelClass}>{t.contact.email}</label>
                     </div>
                   </div>
                   <div className="relative">
-                    <textarea id="message" name="message" value={formData.message} onChange={handleInputChange} required rows={7} placeholder="Tell me about your project" className={`${inputClass} resize-none`} />
-                    <label htmlFor="message" className={labelClass}>Tell me about your project</label>
+                    <textarea id="message" name="message" value={formData.message} onChange={handleInputChange} required rows={7} placeholder={t.contact.message} className={`${inputClass} resize-none`} />
+                    <label htmlFor="message" className={labelClass}>{t.contact.message}</label>
                   </div>
                   {sendError && <p role="alert" className="text-sm text-red-300">{sendError}</p>}
                   <button
@@ -292,7 +274,7 @@ function PublicPortfolio() {
                     className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-teal-600 px-8 py-4 font-semibold shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-shadow disabled:opacity-60"
                   >
                     {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-                    {isSending ? "Sending…" : "Send message"}
+                    {isSending ? t.contact.sending : t.contact.send}
                   </button>
                 </form>
               </Reveal>
@@ -308,14 +290,14 @@ function PublicPortfolio() {
               <Code2 className="h-6 w-6 text-purple-400" />
               <span className="font-display text-lg font-bold gradient-text">I'mcleroi01</span>
             </div>
-            <p className="text-sm text-gray-400">Carlo Musongela · Based in {profile.location ?? staticProfile.location}</p>
-            <p className="text-xs text-gray-500 mt-1">© {new Date().getFullYear()} I'mcleroi01. All rights reserved.</p>
+            <p className="text-sm text-gray-400">Carlo Musongela · {t.footer.basedIn} {profile.location ?? staticProfile.location}</p>
+            <p className="text-xs text-gray-500 mt-1">© {new Date().getFullYear()} I'mcleroi01. {t.footer.rights}</p>
           </div>
-          <p className="text-sm text-gray-500">Built with React, TypeScript, Tailwind, GSAP & Motion</p>
+          <p className="text-sm text-gray-500">{t.footer.builtWith}</p>
           <Magnetic>
             <button
               onClick={() => scrollToId("home")}
-              aria-label="Back to top"
+              aria-label={t.nav.backToTop}
               className="rounded-full border border-white/15 p-3 text-gray-300 hover:text-white hover:bg-white/10"
             >
               <ArrowUp className="h-5 w-5" />
@@ -328,10 +310,11 @@ function PublicPortfolio() {
       <SuccessModal
         isOpen={isSuccessModalOpen}
         onClose={() => setIsSuccessModalOpen(false)}
-        title="Message Sent Successfully!"
-        message="Thank you for your message! I'll get back to you soon."
+        title={t.contact.successTitle}
+        message={t.contact.successMessage}
+        closeLabel={t.projects.modal.close}
       />
-      <WhatsAppButton phoneNumber="+243803122782" message="Bonjour Carlo! Je suis interesse par vos services de developpement." />
+      <WhatsAppButton phoneNumber="+243803122782" />
     </div>
   );
 }

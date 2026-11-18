@@ -5,6 +5,7 @@ import { Magnetic } from "../components/motion/Magnetic";
 import { scrollToId } from "../components/motion/SmoothScroll";
 import { photos, yearsOfExperience } from "../data/resume";
 import type { ProfileRecord } from "../types/portfolio";
+import { useI18n } from "../i18n/context";
 
 interface HeroProps {
   profile: ProfileRecord;
@@ -12,7 +13,12 @@ interface HeroProps {
 }
 
 export function Hero({ profile, fallback }: HeroProps) {
+  const { t } = useI18n();
   const root = useRef<HTMLElement>(null);
+  // The static profile copy is translated; a bio/headline entered in Supabase is shown as-is.
+  const isStatic = (value: string | null, staticValue: string | null) => !value || value === staticValue;
+  const bio = isStatic(profile.bio, fallback.bio) ? t.hero.bio : profile.bio;
+  const headline = isStatic(profile.headline, fallback.headline) ? t.hero.defaultHeadline : profile.headline;
   const languages = profile.languages.length ? profile.languages : fallback.languages;
 
   useGSAP(
@@ -84,11 +90,11 @@ export function Hero({ profile, fallback }: HeroProps) {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
             </span>
-            Available for new projects
+            {t.hero.available}
           </div>
 
           <p data-hero-sub className="text-lg md:text-xl text-gray-400 mb-3">
-            Hey, I'm
+            {t.hero.greeting}
           </p>
           <h1
             data-hero-title
@@ -97,11 +103,11 @@ export function Hero({ profile, fallback }: HeroProps) {
             <span className="gradient-text">{profile.display_name}</span>
           </h1>
           <h2 data-hero-sub className="font-display text-2xl md:text-3xl text-gray-200 mb-6">
-            {profile.headline || "Fullstack Developer"}
+            {headline}
             <span className="text-gray-500"> · Laravel · React · Flutter</span>
           </h2>
           <p data-hero-sub className="text-lg text-gray-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-            {profile.bio ?? fallback.bio}
+            {bio}
           </p>
 
           <div data-hero-cta className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mb-10">
@@ -111,7 +117,7 @@ export function Hero({ profile, fallback }: HeroProps) {
                 className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-teal-600 px-8 py-4 font-semibold shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-shadow"
               >
                 <Mail className="h-5 w-5" />
-                Let's work together
+                {t.hero.ctaContact}
                 <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </button>
             </Magnetic>
@@ -120,7 +126,7 @@ export function Hero({ profile, fallback }: HeroProps) {
                 onClick={() => scrollToId("projects")}
                 className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-8 py-4 font-semibold text-gray-200 hover:bg-white/10 hover:border-white/30 transition-colors backdrop-blur"
               >
-                View projects
+                {t.hero.ctaProjects}
               </button>
             </Magnetic>
           </div>
@@ -166,7 +172,7 @@ export function Hero({ profile, fallback }: HeroProps) {
               srcSet={photos.hero.srcSet}
               sizes="(min-width: 1024px) 40vw, 90vw"
               alt="Carlo Musongela"
-              fetchPriority="high"
+              {...{ fetchpriority: "high" }}
               className="h-[115%] w-full object-cover object-top -mt-[7%]"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-gray-950/70 via-transparent to-transparent" />
@@ -177,13 +183,13 @@ export function Hero({ profile, fallback }: HeroProps) {
             className="absolute -left-4 sm:-left-8 bottom-16 rounded-2xl border border-white/10 bg-gray-900/80 backdrop-blur-xl px-5 py-4 shadow-2xl"
           >
             <div className="font-display text-3xl font-bold gradient-text">{yearsOfExperience}+</div>
-            <div className="text-xs text-gray-400">years building products</div>
+            <div className="text-xs text-gray-400">{t.hero.yearsBadge}</div>
           </div>
           <div
             data-hero-float
             className="absolute -right-3 sm:-right-6 top-12 rounded-2xl border border-white/10 bg-gray-900/80 backdrop-blur-xl px-4 py-3 shadow-2xl text-sm"
           >
-            <span className="text-gray-400">Stack </span>
+            <span className="text-gray-400">{t.hero.stack} </span>
             <span className="font-semibold text-white">Laravel · React · Flutter</span>
           </div>
         </div>
@@ -191,10 +197,10 @@ export function Hero({ profile, fallback }: HeroProps) {
 
       <button
         onClick={() => scrollToId("about")}
-        aria-label="Scroll to about"
+        aria-label={t.hero.scrollAria}
         className="hidden md:flex absolute bottom-8 left-1/2 -translate-x-1/2 flex-col items-center gap-2 text-xs uppercase tracking-[0.3em] text-gray-500 hover:text-gray-300"
       >
-        Scroll
+        {t.hero.scroll}
         <ArrowDown className="h-4 w-4 animate-bounce" />
       </button>
     </section>

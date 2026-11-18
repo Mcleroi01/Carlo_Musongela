@@ -1,11 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { useI18n } from "../i18n/context";
 
 interface ClientLogosProps {
   className?: string;
 }
 
 const ClientLogos: React.FC<ClientLogosProps> = ({ className = "" }) => {
+  const { t } = useI18n();
   const rowRef = useRef<HTMLDivElement>(null);
 
   // Liste des logos clients
@@ -72,11 +74,11 @@ const ClientLogos: React.FC<ClientLogosProps> = ({ className = "" }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8  sm:mx-4 lg:mx-8 xl:mx-16 2xl:mx-32">
           <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-center">
-            Our Clients
+            {t.clients.title}
           </h2>
           <div className="w-16 h-1 bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 my-4 mx-auto"></div>
           <p className="text-gray-400 text-center">
-            Companies that trust our services
+            {t.clients.subtitle}
           </p>
         </div>
 

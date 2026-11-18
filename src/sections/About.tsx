@@ -4,15 +4,17 @@ import { gsap, useGSAP, prefersReducedMotion } from "../lib/gsap";
 import { Counter } from "../components/motion/Counter";
 import { RevealGroup, RevealItem } from "../components/motion/Reveal";
 import { SectionHeading } from "./SectionHeading";
-import { photos, strengths, yearsOfExperience } from "../data/resume";
+import { photos, yearsOfExperience } from "../data/resume";
+import { useI18n } from "../i18n/context";
 
 const icons = [Layers, Briefcase, Palette, ShieldCheck];
 
 export function About({ projectCount }: { projectCount: number }) {
+  const { t } = useI18n();
   const stats = [
-    { value: yearsOfExperience, suffix: "+", label: "Years building" },
-    { value: projectCount, suffix: "", label: "Projects showcased" },
-    { value: 3, suffix: "", label: "Languages spoken" },
+    { value: yearsOfExperience, suffix: "+", label: t.about.stats.years },
+    { value: projectCount, suffix: "", label: t.about.stats.projects },
+    { value: 3, suffix: "", label: t.about.stats.languages },
   ];
   const ref = useRef<HTMLElement>(null);
 
@@ -51,7 +53,7 @@ export function About({ projectCount }: { projectCount: number }) {
               src={photos.about.src}
               srcSet={photos.about.srcSet}
               sizes="(min-width: 1024px) 35vw, 90vw"
-              alt="Carlo Musongela at work"
+              alt={t.about.photoAlt}
               loading="lazy"
               className="h-full w-full object-cover"
             />
@@ -62,13 +64,13 @@ export function About({ projectCount }: { projectCount: number }) {
         <div>
           <SectionHeading
             align="left"
-            eyebrow="About me"
+            eyebrow={t.about.eyebrow}
             title={
               <>
-                Turning business needs into <span className="gradient-text">reliable products</span>
+                {t.about.titleStart} <span className="gradient-text">{t.about.titleHighlight}</span>
               </>
             }
-            description="Graduate in Computer Technology (ISP/Gombe, with honours), I design and ship web and mobile applications for health, e-commerce, education and events. My dual development and creative profile (UI/UX, design, video editing) lets me deliver products that are solid, polished and pleasant to use."
+            description={t.about.description}
           />
 
           <div className="grid grid-cols-3 gap-4 mb-10">
@@ -83,11 +85,11 @@ export function About({ projectCount }: { projectCount: number }) {
           </div>
 
           <RevealGroup className="grid sm:grid-cols-2 gap-4">
-            {strengths.map((s, i) => {
+            {t.about.strengths.map((s, i) => {
               const Icon = icons[i % icons.length];
               return (
                 <RevealItem
-                  key={s.title}
+                  key={i}
                   className="group rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent p-5 hover:border-purple-400/40 transition-colors"
                 >
                   <Icon className="h-5 w-5 text-teal-300 mb-3 transition-transform group-hover:-translate-y-0.5" />

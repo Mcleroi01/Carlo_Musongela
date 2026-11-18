@@ -3,17 +3,44 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Code2, Download, Menu, X } from "lucide-react";
 import { scrollToId } from "../components/motion/SmoothScroll";
 import { CV_URL } from "../data/resume";
+import { useI18n } from "../i18n/context";
 
-const links = [
-  { id: "home", label: "Home" },
-  { id: "about", label: "About" },
-  { id: "services", label: "Services" },
-  { id: "experience", label: "Experience" },
-  { id: "projects", label: "Projects" },
-  { id: "contact", label: "Contact" },
-];
+const sectionIds = ["home", "about", "services", "experience", "projects", "contact"] as const;
+
+function LanguageToggle() {
+  const { lang, setLang, t } = useI18n();
+  return (
+    <div
+      role="group"
+      aria-label={t.nav.switchLang}
+      className="relative flex items-center rounded-full border border-white/10 bg-white/[0.03] p-1 text-xs font-semibold"
+    >
+      {(["fr", "en"] as const).map((code) => (
+        <button
+          key={code}
+          onClick={() => setLang(code)}
+          aria-pressed={lang === code}
+          className={`relative rounded-full px-3 py-1.5 uppercase transition-colors ${
+            lang === code ? "text-gray-950" : "text-gray-400 hover:text-white"
+          }`}
+        >
+          {lang === code && (
+            <motion.span
+              layoutId="lang-pill"
+              className="absolute inset-0 rounded-full bg-white"
+              transition={{ type: "spring", stiffness: 420, damping: 32 }}
+            />
+          )}
+          <span className="relative">{code}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function Navbar() {
+  const { t } = useI18n();
+  const links = sectionIds.map((id) => ({ id, label: t.nav[id] }));
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("home");
   const [scrolled, setScrolled] = useState(false);
@@ -27,7 +54,7 @@ export function Navbar() {
       (entries) => entries.forEach((e) => e.isIntersecting && setActive(e.target.id)),
       { rootMargin: "-45% 0px -50% 0px" },
     );
-    links.forEach(({ id }) => {
+    sectionIds.forEach((id) => {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
@@ -53,7 +80,7 @@ export function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
-        <button onClick={() => go("home")} className="flex items-center gap-2" aria-label="Back to top">
+        <button onClick={() => go("home")} className="flex items-center gap-2" aria-label={t.nav.backToTop}>
           <Code2 className="h-7 w-7 text-purple-400" />
           <span className="font-display text-lg font-bold gradient-text">I'mcleroi01</span>
         </button>
@@ -79,23 +106,31 @@ export function Navbar() {
           ))}
         </div>
 
-        <a
-          href={CV_URL}
-          download="Musongela_Carlo_CV.pdf"
-          className="hidden md:inline-flex items-center gap-2 rounded-full bg-white text-gray-950 px-5 py-2 text-sm font-semibold hover:bg-purple-100 transition-colors"
-        >
-          <Download className="h-4 w-4" />
-          Download CV
-        </a>
+        <div className="hidden md:flex items-center gap-3">
+          <LanguageToggle />
+          <a
+            href={CV_URL}
+            download="Musongela_Carlo_CV.pdf"
+            title={t.nav.downloadCv}
+            className="inline-flex items-center gap-2 rounded-full bg-white text-gray-950 px-4 xl:px-5 py-2 text-sm font-semibold hover:bg-purple-100 transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            <span className="hidden xl:inline">{t.nav.downloadCv}</span>
+            <span className="xl:hidden">CV</span>
+          </a>
+        </div>
 
-        <button
-          className="md:hidden text-gray-300 hover:text-white"
-          onClick={() => setOpen((o) => !o)}
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-        >
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <div className="md:hidden flex items-center gap-3">
+          <LanguageToggle />
+          <button
+            className="text-gray-300 hover:text-white"
+            onClick={() => setOpen((o) => !o)}
+            aria-label={open ? t.nav.closeMenu : t.nav.openMenu}
+            aria-expanded={open}
+          >
+            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -127,7 +162,7 @@ export function Navbar() {
                 className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-white text-gray-950 px-5 py-3 font-semibold"
               >
                 <Download className="h-4 w-4" />
-                Download CV
+                {t.nav.downloadCv}
               </a>
             </div>
           </motion.div>

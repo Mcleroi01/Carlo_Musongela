@@ -2,6 +2,8 @@ import React from "react";
 import { Modal } from "./Modal";
 import { ExternalLink, Github, Calendar, Tag, Users } from "lucide-react";
 import type { Project } from "../types/portfolio";
+import { useI18n } from "../i18n/context";
+import { localizeProject } from "../data/projects.fr";
 
 interface ProjectModalProps {
   isOpen: boolean;
@@ -12,9 +14,12 @@ interface ProjectModalProps {
 export const ProjectModal: React.FC<ProjectModalProps> = ({
   isOpen,
   onClose,
-  project,
+  project: rawProject,
 }) => {
-  if (!project) return null;
+  const { t, lang } = useI18n();
+  if (!rawProject) return null;
+  const project = localizeProject(rawProject, lang);
+  const m = t.projects.modal;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -59,7 +64,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               target.parentElement!.innerHTML = `
                 <div class="text-gray-400 text-center">
                   <div class="text-4xl mb-2">🚀</div>
-                  <div>Project Preview</div>
+                  <div>${m.preview}</div>
                 </div>
               `;
             }}
@@ -73,7 +78,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               project.status
             )}`}
           >
-            {project.status}
+            {t.projects.status[project.status] ?? project.status}
           </span>
           <span
             className={`px-3 py-1 rounded-full text-sm font-medium border ${getCategoryColor(
@@ -81,14 +86,14 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
             )}`}
           >
             <Tag className="w-3 h-3 mr-1 inline" />
-            {project.category}
+            {t.projects.category[project.category] ?? project.category}
           </span>
         </div>
 
         {/* Description */}
         <div>
           <h3 className="text-lg font-semibold text-white mb-2">
-            Project Overview
+            {m.overview}
           </h3>
           <p className="text-gray-300 leading-relaxed">
             {project.longDescription}
@@ -101,13 +106,13 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
             <div className="flex items-center text-gray-300">
               <Users className="w-4 h-4 mr-2 text-purple-400" />
               <span className="text-sm">
-                Client: <span className="text-white">{project.client}</span>
+                {m.client} : <span className="text-white">{project.client}</span>
               </span>
             </div>
             <div className="flex items-center text-gray-300">
               <Calendar className="w-4 h-4 mr-2 text-teal-400" />
               <span className="text-sm">
-                Duration: <span className="text-white">{project.duration}</span>
+                {m.duration} : <span className="text-white">{project.duration}</span>
               </span>
             </div>
           </div>
@@ -115,14 +120,14 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
             <div className="flex items-center text-gray-300">
               <Users className="w-4 h-4 mr-2 text-blue-400" />
               <span className="text-sm">
-                Team Size:{" "}
-                <span className="text-white">{project.teamSize} members</span>
+                {m.teamSize} :{" "}
+                <span className="text-white">{project.teamSize} {m.members}</span>
               </span>
             </div>
             <div className="flex items-center text-gray-300">
               <Calendar className="w-4 h-4 mr-2 text-green-400" />
               <span className="text-sm">
-                Completed:{" "}
+                {m.completed} :{" "}
                 <span className="text-white">{project.completedDate}</span>
               </span>
             </div>
@@ -132,7 +137,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
         {/* Technologies */}
         <div>
           <h3 className="text-lg font-semibold text-white mb-3">
-            Technologies Used
+            {m.technologies}
           </h3>
           <div className="flex flex-wrap gap-2">
             {project.technologies.map((tech, index) => (
@@ -156,7 +161,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-teal-600 hover:from-purple-700 hover:to-teal-700 text-white rounded-lg font-medium transition-all duration-200 transform hover:scale-105"
             >
               <ExternalLink className="w-4 h-4 mr-2" />
-              View Live
+              {m.viewLive}
             </a>
           )}
           {project.githubUrl && (
@@ -167,7 +172,7 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
               className="flex items-center px-4 py-2 bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg font-medium transition-all duration-200 border border-gray-600/50 hover:border-gray-500"
             >
               <Github className="w-4 h-4 mr-2" />
-              View Code
+              {m.viewCode}
             </a>
           )}
         </div>

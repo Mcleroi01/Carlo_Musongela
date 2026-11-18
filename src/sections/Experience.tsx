@@ -3,9 +3,10 @@ import { GraduationCap } from "lucide-react";
 import { gsap, useGSAP, prefersReducedMotion } from "../lib/gsap";
 import { Reveal } from "../components/motion/Reveal";
 import { SectionHeading } from "./SectionHeading";
-import { education, experience } from "../data/resume";
+import { useI18n } from "../i18n/context";
 
 export function Experience() {
+  const { t, lang } = useI18n();
   const ref = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -36,20 +37,21 @@ export function Experience() {
         });
       });
     },
-    { scope: ref },
+    // Re-run on language change so the per-job triggers target the re-rendered cards.
+    { scope: ref, dependencies: [lang], revertOnUpdate: true },
   );
 
   return (
     <section id="experience" ref={ref} className="relative z-10 py-28 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <SectionHeading
-          eyebrow="Career"
+          eyebrow={t.experience.eyebrow}
           title={
             <>
-              Experience & <span className="gradient-text">education</span>
+              {t.experience.titleStart} <span className="gradient-text">{t.experience.titleHighlight}</span>
             </>
           }
-          description="From TV post-production to fullstack engineering: a path built on shipping real products for real users."
+          description={t.experience.description}
         />
 
         <div className="grid lg:grid-cols-[1.4fr_1fr] gap-12">
@@ -60,8 +62,8 @@ export function Experience() {
               className="absolute left-[11px] top-2 bottom-2 w-px origin-top bg-gradient-to-b from-purple-400 via-blue-400 to-teal-400"
             />
             <div className="space-y-10">
-              {experience.map((job) => (
-                <article key={job.role} data-job className="relative">
+              {t.experience.jobs.map((job) => (
+                <article key={job.period} data-job className="relative">
                   <span
                     data-dot
                     className="absolute -left-10 top-1.5 flex h-6 w-6 items-center justify-center rounded-full border border-purple-400/50 bg-gray-950"
@@ -91,11 +93,11 @@ export function Experience() {
           <Reveal className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent p-8 h-fit lg:sticky lg:top-28">
             <div className="flex items-center gap-3 mb-6">
               <GraduationCap className="h-6 w-6 text-teal-300" />
-              <h3 className="font-display text-xl font-semibold">Education</h3>
+              <h3 className="font-display text-xl font-semibold">{t.experience.educationTitle}</h3>
             </div>
             <ul className="divide-y divide-white/5">
-              {education.map((e) => (
-                <li key={e.title} className="py-4 first:pt-0 last:pb-0 flex justify-between gap-4">
+              {t.experience.education.map((e) => (
+                <li key={e.school + e.year} className="py-4 first:pt-0 last:pb-0 flex justify-between gap-4">
                   <div>
                     <p className="font-medium text-gray-100">{e.title}</p>
                     <p className="text-sm text-gray-400">{e.school}</p>
